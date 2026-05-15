@@ -18,6 +18,8 @@ import TransactionsPayInPage from '@/pages/TransactionsPayInPage';
 import TransactionsPayOutPage from '@/pages/TransactionsPayOutPage';
 import CreatePayOutPage from '@/pages/CreatePayOutPage';
 import SettlementsPage from '@/pages/SettlementsPage';
+import UsersPage from '@/pages/UsersPage';
+import RolesPage from '@/pages/RolesPage';
 import StubPage from '@/pages/StubPage';
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
 import Step1DatosEmpresa from '@/components/onboarding/Step1_DatosEmpresa';
@@ -84,8 +86,8 @@ export default function App() {
             <Route path="/transactions/pay-out/create" element={<CreatePayOutPage />} />
 
             <Route path="/settlements" element={<SettlementsPage />} />
-            <Route path="/users" element={<StubPage phase={7} title="Usuarios" />} />
-            <Route path="/roles" element={<StubPage phase={7} title="Roles" />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/roles" element={<RolesPage />} />
             <Route path="/account" element={<StubPage phase={8} title="Cuenta" />} />
             <Route path="/security" element={<StubPage phase={8} title="Centro de Seguridad" />} />
             <Route path="/api-keys" element={<StubPage phase={8} title="API Keys" />} />

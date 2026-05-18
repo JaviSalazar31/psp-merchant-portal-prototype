@@ -20,7 +20,11 @@ import CreatePayOutPage from '@/pages/CreatePayOutPage';
 import SettlementsPage from '@/pages/SettlementsPage';
 import UsersPage from '@/pages/UsersPage';
 import RolesPage from '@/pages/RolesPage';
-import StubPage from '@/pages/StubPage';
+import AccountPage from '@/pages/AccountPage';
+import SecurityCenterPage from '@/pages/SecurityCenterPage';
+import ApiKeysPage from '@/pages/ApiKeysPage';
+import WebhooksPage from '@/pages/WebhooksPage';
+import ProfilePage from '@/pages/ProfilePage';
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
 import Step1DatosEmpresa from '@/components/onboarding/Step1_DatosEmpresa';
 import Step2DireccionComercial from '@/components/onboarding/Step2_DireccionComercial';
@@ -88,11 +92,11 @@ export default function App() {
             <Route path="/settlements" element={<SettlementsPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/roles" element={<RolesPage />} />
-            <Route path="/account" element={<StubPage phase={8} title="Cuenta" />} />
-            <Route path="/security" element={<StubPage phase={8} title="Centro de Seguridad" />} />
-            <Route path="/api-keys" element={<StubPage phase={8} title="API Keys" />} />
-            <Route path="/webhooks" element={<StubPage phase={8} title="Webhooks" />} />
-            <Route path="/profile" element={<StubPage phase={8} title="Mi perfil" />} />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/security" element={<SecurityCenterPage />} />
+            <Route path="/api-keys" element={<ApiKeysPage />} />
+            <Route path="/webhooks" element={<WebhooksPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

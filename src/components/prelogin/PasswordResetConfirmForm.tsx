@@ -19,6 +19,7 @@ import PasswordChecklist, {
   DEFAULT_PASSWORD_RULES,
   isPasswordValid,
 } from '@/components/common/PasswordChecklist';
+import PasswordStrengthBar from '@/components/common/PasswordStrengthBar';
 import { toast } from '@/stores/toastStore';
 
 const schema = yup.object({
@@ -102,6 +103,7 @@ export function PasswordResetConfirmForm() {
             ),
           }}
         />
+        <PasswordStrengthBar password={password ?? ''} />
         <PasswordChecklist password={password ?? ''} />
       </Stack>
 

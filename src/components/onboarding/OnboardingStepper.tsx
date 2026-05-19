@@ -1,5 +1,7 @@
 import { Box, Stack, Typography, LinearProgress } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import CloseIcon from '@mui/icons-material/Close';
 import { colors } from '@/theme/tokens';
 
 export interface StepDef {
@@ -10,10 +12,37 @@ export interface StepDef {
 interface OnboardingStepperProps {
   steps: StepDef[];
   currentStep: 1 | 2 | 3 | 4 | 5;
+  /** Pasos completados (datos guardados). Marcados con palomita verde. */
   completedSteps: number[];
+  /** Pasos iniciados pero incompletos (datos parciales). Marcados con reloj ámbar. */
+  startedSteps?: number[];
+  /** Pasos con errores de validación. Marcados con cruz roja. */
+  errorSteps?: number[];
 }
 
-export function OnboardingStepper({ steps, currentStep, completedSteps }: OnboardingStepperProps) {
+type StepState = 'completed' | 'active' | 'started' | 'error' | 'pending';
+
+function resolveState(
+  stepId: number,
+  currentStep: number,
+  completedSteps: number[],
+  startedSteps: number[],
+  errorSteps: number[],
+): StepState {
+  if (errorSteps.includes(stepId)) return 'error';
+  if (completedSteps.includes(stepId)) return 'completed';
+  if (stepId === currentStep) return 'active';
+  if (startedSteps.includes(stepId)) return 'started';
+  return 'pending';
+}
+
+export function OnboardingStepper({
+  steps,
+  currentStep,
+  completedSteps,
+  startedSteps = [],
+  errorSteps = [],
+}: OnboardingStepperProps) {
   const currentMeta = steps.find(s => s.id === currentStep);
 
   return (
@@ -48,13 +77,52 @@ export function OnboardingStepper({ steps, currentStep, completedSteps }: Onboar
       >
         <Stack direction="row" spacing={0} alignItems="flex-start" justifyContent="space-between">
           {steps.map((step, idx) => {
-            const isCompleted = completedSteps.includes(step.id);
-            const isActive = step.id === currentStep;
-            const isPending = !isCompleted && !isActive;
+            const state = resolveState(step.id, currentStep, completedSteps, startedSteps, errorSteps);
 
-            const circleBg = isCompleted || isActive ? colors.brandPrimary : colors.bgCard;
-            const circleBorder = isCompleted || isActive ? colors.brandPrimary : colors.borderStrong;
-            const circleColor = isCompleted || isActive ? colors.brandDarkest : colors.textSecondary;
+            const circleStyles = (() => {
+              switch (state) {
+                case 'completed':
+                  return {
+                    bg: colors.brandPrimary,
+                    border: colors.brandPrimary,
+                    color: colors.brandDarkest,
+                  };
+                case 'active':
+                  return {
+                    bg: colors.brandPrimary,
+                    border: colors.brandPrimary,
+                    color: colors.brandDarkest,
+                  };
+                case 'started':
+                  return {
+                    bg: colors.bannerWarning.bg,
+                    border: colors.bannerWarning.fg,
+                    color: colors.bannerWarning.fg,
+                  };
+                case 'error':
+                  return {
+                    bg: colors.bannerError.bg,
+                    border: colors.bannerError.fg,
+                    color: colors.bannerError.fg,
+                  };
+                default:
+                  return {
+                    bg: colors.bgCard,
+                    border: colors.borderStrong,
+                    color: colors.textSecondary,
+                  };
+              }
+            })();
+
+            const labelColor =
+              state === 'pending' ? colors.textSecondary : colors.textPrimary;
+
+            const icon = (() => {
+              if (state === 'completed') return <CheckIcon sx={{ fontSize: 16 }} />;
+              if (state === 'started') return <HourglassEmptyIcon sx={{ fontSize: 14 }} />;
+              if (state === 'error') return <CloseIcon sx={{ fontSize: 16 }} />;
+              return step.id;
+            })();
 
             const showLineRight = idx < steps.length - 1;
             const nextCompleted = showLineRight && completedSteps.includes(step.id);
@@ -86,26 +154,26 @@ export function OnboardingStepper({ steps, currentStep, completedSteps }: Onboar
                     width: 28,
                     height: 28,
                     borderRadius: '50%',
-                    backgroundColor: circleBg,
-                    border: `2px solid ${circleBorder}`,
+                    backgroundColor: circleStyles.bg,
+                    border: `2px solid ${circleStyles.border}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: circleColor,
+                    color: circleStyles.color,
                     fontSize: 13,
                     fontWeight: 700,
                     zIndex: 1,
-                    boxShadow: isActive ? '0 0 0 4px rgba(124, 255, 69, 0.18)' : 'none',
+                    boxShadow: state === 'active' ? '0 0 0 4px rgba(124, 255, 69, 0.18)' : 'none',
                     transition: 'box-shadow 120ms ease',
                   }}
                 >
-                  {isCompleted ? <CheckIcon sx={{ fontSize: 16 }} /> : step.id}
+                  {icon}
                 </Box>
                 <Typography
                   variant="caption"
                   sx={{
-                    fontWeight: isActive ? 600 : 500,
-                    color: isPending ? colors.textSecondary : colors.textPrimary,
+                    fontWeight: state === 'active' ? 600 : 500,
+                    color: labelColor,
                     textAlign: 'center',
                     paddingX: 0.5,
                     lineHeight: 1.3,

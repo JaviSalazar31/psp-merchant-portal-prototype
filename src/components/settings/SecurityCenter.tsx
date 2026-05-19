@@ -12,7 +12,7 @@ import {
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
-import ChangePasswordModal from './ChangePasswordModal';
+import ChangePasswordInline from './ChangePasswordInline';
 import TimeAgo from '@/components/common/TimeAgo';
 import { useAuthStore } from '@/stores/authStore';
 import { useSecurityStore } from '@/stores/securityStore';
@@ -178,13 +178,17 @@ export function SecurityCenter() {
               </Stack>
             </Stack>
           </Stack>
-          <Button variant="contained" color="primary" onClick={() => setPwdOpen(true)}>
-            Cambiar contraseña
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setPwdOpen(o => !o)}
+            aria-expanded={pwdOpen}
+          >
+            {pwdOpen ? 'Cancelar cambio' : 'Cambiar contraseña'}
           </Button>
         </Stack>
+        <ChangePasswordInline open={pwdOpen} onClose={() => setPwdOpen(false)} />
       </CardSection>
-
-      <ChangePasswordModal open={pwdOpen} onClose={() => setPwdOpen(false)} />
     </Stack>
   );
 }

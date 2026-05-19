@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { muiTheme } from '@/theme/muiTheme';
+import { buildMuiTheme } from '@/theme/muiTheme';
+import { useUIStore } from '@/stores/uiStore';
 import ToastContainer from '@/components/common/ToastContainer';
 import PublicRoute from '@/routes/PublicRoute';
 import ProtectedRoute from '@/routes/ProtectedRoute';
@@ -23,6 +25,7 @@ import SecurityCenterPage from '@/pages/SecurityCenterPage';
 import ApiKeysPage from '@/pages/ApiKeysPage';
 import WebhooksPage from '@/pages/WebhooksPage';
 import ProfilePage from '@/pages/ProfilePage';
+import NotFoundPage from '@/pages/NotFoundPage';
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
 import Step1DatosEmpresa from '@/components/onboarding/Step1_DatosEmpresa';
 import Step2DireccionComercial from '@/components/onboarding/Step2_DireccionComercial';
@@ -34,8 +37,11 @@ import AppLayout from '@/components/layout/AppLayout';
 import TransactionsLayout from '@/components/transactions/TransactionsLayout';
 
 export default function App() {
+  const darkMode = useUIStore(s => s.darkMode);
+  const theme = useMemo(() => buildMuiTheme(darkMode ? 'dark' : 'light'), [darkMode]);
+
   return (
-    <ThemeProvider theme={muiTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
         <Routes>
@@ -96,7 +102,9 @@ export default function App() {
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/500" element={<NotFoundPage variant="500" />} />
+          <Route path="/403" element={<NotFoundPage variant="403" />} />
+          <Route path="*" element={<NotFoundPage variant="404" />} />
         </Routes>
         <ToastContainer />
       </BrowserRouter>

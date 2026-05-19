@@ -10,16 +10,19 @@ import {
   Menu,
   MenuItem,
   Stack,
+  Switch,
   Typography,
 } from '@mui/material';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
 import { useAuthStore } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
 import { colors } from '@/theme/tokens';
 
 function initialsOf(firstName?: string, lastName?: string): string {
@@ -38,6 +41,8 @@ export function AvatarMenu() {
   const navigate = useNavigate();
   const user = useAuthStore(s => s.user);
   const logout = useAuthStore(s => s.logout);
+  const darkMode = useUIStore(s => s.darkMode);
+  const toggleDarkMode = useUIStore(s => s.toggleDarkMode);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   if (!user) return null;
@@ -132,6 +137,31 @@ export function AvatarMenu() {
             <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: 14 }} />
           </MenuItem>
         ))}
+        <Divider />
+        <MenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleDarkMode();
+          }}
+          sx={{ '&:hover': { backgroundColor: 'transparent' } }}
+        >
+          <ListItemIcon>
+            <DarkModeOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Modo oscuro" primaryTypographyProps={{ fontSize: 14 }} />
+          <Switch
+            checked={darkMode}
+            onChange={toggleDarkMode}
+            size="small"
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': { color: colors.brandPrimary },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: colors.brandPrimary,
+              },
+            }}
+            inputProps={{ 'aria-label': 'Activar modo oscuro' }}
+          />
+        </MenuItem>
         <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>

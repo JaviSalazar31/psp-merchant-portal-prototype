@@ -29,6 +29,7 @@ import PasswordChecklist, {
   DEFAULT_PASSWORD_RULES,
   isPasswordValid,
 } from '@/components/common/PasswordChecklist';
+import PasswordStrengthBar from '@/components/common/PasswordStrengthBar';
 import { COUNTRIES } from '@/constants/countries';
 import { useAuthStore, type Language } from '@/stores/authStore';
 import { redirectAfterLogin } from '@/routes/postAuthRedirect';
@@ -243,6 +244,7 @@ export function RegistroForm() {
             ),
           }}
         />
+        <PasswordStrengthBar password={password ?? ''} />
         <PasswordChecklist password={password ?? ''} />
       </Stack>
 

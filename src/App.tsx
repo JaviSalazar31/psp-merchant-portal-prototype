@@ -26,6 +26,7 @@ import ApiKeysPage from '@/pages/ApiKeysPage';
 import WebhooksPage from '@/pages/WebhooksPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import DevPage from '@/pages/DevPage';
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
 import Step1DatosEmpresa from '@/components/onboarding/Step1_DatosEmpresa';
 import Step2DireccionComercial from '@/components/onboarding/Step2_DireccionComercial';
@@ -101,6 +102,8 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
+          {/* Ruta oculta para presentaciones / debug. Solo accesible tipeando /dev. */}
+          <Route path="/dev" element={<DevPage />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/500" element={<NotFoundPage variant="500" />} />
           <Route path="/403" element={<NotFoundPage variant="403" />} />

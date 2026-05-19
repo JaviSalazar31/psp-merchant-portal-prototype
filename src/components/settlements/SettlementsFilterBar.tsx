@@ -63,6 +63,7 @@ export function SettlementsFilterBar({ filters, onChange }: Props) {
             onChange={e => set('status', e.target.value as SettlementStatusKey | '')}
             label="Estado"
             SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
           >
             <MenuItem value="">
               <em>Todos</em>
@@ -82,6 +83,7 @@ export function SettlementsFilterBar({ filters, onChange }: Props) {
             onChange={e => set('currency', e.target.value)}
             label="Moneda"
             SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
           >
             <MenuItem value="">
               <em>Todas</em>

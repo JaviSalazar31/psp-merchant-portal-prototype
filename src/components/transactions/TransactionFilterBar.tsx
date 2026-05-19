@@ -59,6 +59,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             onChange={e => set('country', e.target.value ? [e.target.value] : [])}
             label="País"
             SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
           >
             <MenuItem value="">
               <em>Todos</em>
@@ -78,6 +79,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             onChange={e => set('currency', e.target.value ? [e.target.value] : [])}
             label="Moneda"
             SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
           >
             <MenuItem value="">
               <em>Todas</em>
@@ -97,6 +99,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             onChange={e => set('paymentMethod', e.target.value ? [e.target.value] : [])}
             label="Método"
             SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
           >
             <MenuItem value="">
               <em>Todos</em>
@@ -116,6 +119,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             onChange={e => set('status', e.target.value ? [e.target.value as TransactionStatusKey] : [])}
             label="Estado"
             SelectProps={{ displayEmpty: true }}
+            InputLabelProps={{ shrink: true }}
           >
             <MenuItem value="">
               <em>Todos</em>

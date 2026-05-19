@@ -308,6 +308,11 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
               Comprobante Electrónico de Pago (CEP)
             </Typography>
             <KV label="Folio" value={transaction.partnerReference ?? '—'} mono />
+            <KV
+              label="Clave de Rastreo"
+              value={`SPEI${transaction.id.slice(-12).toUpperCase()}`}
+              mono
+            />
             <KV label="Banco emisor" value="BBVA México" />
             <KV label="Banco receptor" value="Santander México" />
             <KV label="CLABE emisora" value="012345678901234567" mono />

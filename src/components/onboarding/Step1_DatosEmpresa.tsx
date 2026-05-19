@@ -22,6 +22,9 @@ import { INDUSTRIES, MONTHLY_VOLUME_RANGES } from '@/constants/industries';
 import { useOnboardingStore, type Step1Data } from '@/stores/onboardingStore';
 import { colors } from '@/theme/tokens';
 
+// Máximo de tres países de operación según la definición productiva de Fase 1.
+const MAX_OPERATION_COUNTRIES = 3;
+
 const schema = yup.object({
   fiscalId: yup.string().min(4, 'Mínimo 4 caracteres').required('Obligatorio'),
   fiscalResidenceCountry: yup.string().required('Obligatorio'),
@@ -36,6 +39,7 @@ const schema = yup.object({
   operationCountries: yup
     .array(yup.string().required())
     .min(1, 'Seleccioná al menos un país de operación')
+    .max(MAX_OPERATION_COUNTRIES, `Podés seleccionar hasta ${MAX_OPERATION_COUNTRIES} países`)
     .required(),
 });
 
@@ -269,7 +273,13 @@ export function Step1DatosEmpresa() {
             getOptionLabel={code => COUNTRY_BY_CODE[code]?.name ?? code}
             onChange={(_, val) => {
               setTouchedCountries(true);
-              field.onChange(val);
+              // Forzamos máximo de 3 países en el cliente para alinear con la spec productiva.
+              const trimmed = val.length > MAX_OPERATION_COUNTRIES ? val.slice(0, MAX_OPERATION_COUNTRIES) : val;
+              field.onChange(trimmed);
+            }}
+            getOptionDisabled={code => {
+              const selected = field.value ?? [];
+              return selected.length >= MAX_OPERATION_COUNTRIES && !selected.includes(code);
             }}
             renderTags={(value, getTagProps) =>
               value.map((code, index) => {
@@ -314,7 +324,8 @@ export function Step1DatosEmpresa() {
                 placeholder={field.value && field.value.length > 0 ? '' : 'Seleccioná uno o más'}
                 error={!!errors.operationCountries}
                 helperText={
-                  errors.operationCountries?.message ?? 'Puedes seleccionar múltiples países'
+                  errors.operationCountries?.message ??
+                  `Hasta ${MAX_OPERATION_COUNTRIES} países (${(field.value ?? []).length}/${MAX_OPERATION_COUNTRIES})`
                 }
               />
             )}

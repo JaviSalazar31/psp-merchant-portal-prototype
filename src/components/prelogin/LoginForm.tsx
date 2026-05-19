@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
-import ContextBanner from '@/components/common/ContextBanner';
 import LockoutDialog, { type LockoutType } from './LockoutDialog';
 import { useAuthStore } from '@/stores/authStore';
 import { redirectAfterLogin } from '@/routes/postAuthRedirect';
@@ -46,12 +45,22 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isValid },
   } = useForm<FormValues>({
     resolver: yupResolver(loginSchema),
     mode: 'onChange',
     defaultValues: { email: '', password: '' },
   });
+
+  const emailValue = watch('email');
+  const passwordValue = watch('password');
+
+  // Cuando el usuario corrige el contenido tras un error de credenciales, limpiamos la marca
+  // para que los campos vuelvan al estado neutro.
+  const resetCredentialErrorOnEdit = () => {
+    if (credentialError) setCredentialError(false);
+  };
 
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
@@ -97,29 +106,23 @@ export function LoginForm() {
         </Typography>
       </Stack>
 
-      {credentialError && (
-        <ContextBanner variant="error">
-          Usuario o contraseña incorrectos. Verificá tus datos e intentá nuevamente.
-        </ContextBanner>
-      )}
-
       <TextField
-        {...register('email')}
+        {...register('email', { onChange: resetCredentialErrorOnEdit })}
         label="Correo electrónico"
         type="email"
         autoComplete="email"
-        error={!!errors.email}
-        helperText={errors.email?.message}
+        error={!!errors.email || credentialError}
+        helperText={errors.email?.message ?? (credentialError ? 'Credenciales incorrectas' : ' ')}
         disabled={formDisabled}
       />
 
       <TextField
-        {...register('password')}
+        {...register('password', { onChange: resetCredentialErrorOnEdit })}
         label="Contraseña"
         type={showPassword ? 'text' : 'password'}
         autoComplete="current-password"
-        error={!!errors.password}
-        helperText={errors.password?.message}
+        error={!!errors.password || credentialError}
+        helperText={errors.password?.message ?? (credentialError ? 'Credenciales incorrectas' : ' ')}
         disabled={formDisabled}
         InputProps={{
           endAdornment: (
@@ -146,7 +149,7 @@ export function LoginForm() {
         variant="contained"
         color="primary"
         size="large"
-        disabled={!isValid || formDisabled}
+        disabled={!isValid || formDisabled || !emailValue || !passwordValue}
         fullWidth
       >
         {submitting ? (

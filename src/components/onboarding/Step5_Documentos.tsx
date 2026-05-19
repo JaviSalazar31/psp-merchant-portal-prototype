@@ -98,14 +98,14 @@ export function Step5Documentos() {
     // Descarga simulada del .docx con un Blob mock.
     const blob = new Blob(
       [
-        'PAYNAU KYC TEMPLATE (mock)\n\nEste archivo simula la plantilla descargable.\nEn producción será un .docx con campos pre-llenados.',
+        'PSP KYC TEMPLATE (mock)\n\nEste archivo simula la plantilla descargable.\nEn producción será un .docx con campos pre-llenados.',
       ],
       { type: 'application/msword' },
     );
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'paynau-kyc-template.docx';
+    a.download = 'psp-kyc-template.docx';
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Plantilla KYC descargada.');

@@ -122,7 +122,7 @@ export function SettlementDetailModal({ settlement, open, onClose }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `paynau-${settlement.id}.csv`;
+    a.download = `psp-${settlement.id}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success(`Reporte de ${settlement.id} descargado.`);

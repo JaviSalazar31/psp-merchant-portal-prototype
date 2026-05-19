@@ -115,7 +115,7 @@ export function CreateWebhookModal({ open, webhook, onClose }: Props) {
                 : 'Solo aceptamos endpoints sobre HTTPS.'
             }
             required
-            placeholder="https://tu-dominio.com/webhooks/paynau"
+            placeholder="https://tu-dominio.com/webhooks/psp"
           />
 
           <TextField

@@ -101,7 +101,7 @@ export function WebhooksList() {
       <ContextBanner variant="info">
         Tus endpoints reciben un POST firmado con HMAC SHA256 usando el{' '}
         <strong>signing secret</strong> de cada webhook. Verificá la firma del header{' '}
-        <code>Paynau-Signature</code> antes de procesar el evento.
+        <code>PSP-Signature</code> antes de procesar el evento.
       </ContextBanner>
 
       <Stack spacing={2}>

@@ -12,11 +12,12 @@ interface LogoProps {
 }
 
 /**
- * Wordmark "paynau" con acento verde brand.
- * Inspirado en la captura 42 — lowercase con un punto/dot verde brand sobre la 'y'.
+ * Wordmark "PSP" — Payment Service Provider. Mayúsculas con un dot verde brand como acento
+ * en la esquina superior derecha. Reemplaza al wordmark "paynau" de la primera versión del
+ * prototipo: el portal tiene identidad propia dentro del grupo.
  */
 export function Logo({
-  width = 120,
+  width = 96,
   color,
   accentColor = colors.brandPrimary,
   variant = 'default',
@@ -27,24 +28,24 @@ export function Logo({
   return (
     <Box
       component="svg"
-      viewBox="0 0 240 64"
+      viewBox="0 0 200 64"
       sx={{ width, height: 'auto', display: 'block', ...sx }}
       role="img"
-      aria-label="Paynau"
+      aria-label="PSP"
     >
       <text
         x="0"
-        y="46"
+        y="48"
         fontFamily='"Inter", -apple-system, sans-serif'
-        fontWeight="700"
-        fontSize="44"
-        letterSpacing="-2"
+        fontWeight="800"
+        fontSize="48"
+        letterSpacing="-1"
         fill={textColor}
       >
-        paynau
+        PSP
       </text>
-      {/* Dot acento verde brand sobre la 'y' */}
-      <circle cx="84" cy="14" r="7" fill={accentColor} />
+      {/* Dot acento verde brand sobre la 'P' final */}
+      <circle cx="170" cy="16" r="7" fill={accentColor} />
     </Box>
   );
 }

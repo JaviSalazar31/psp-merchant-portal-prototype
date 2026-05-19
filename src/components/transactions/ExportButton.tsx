@@ -24,7 +24,7 @@ export function ExportButton({ scope }: { scope: string }) {
     setAnchorEl(null);
     const ext = fmt;
     const stamp = new Date().toISOString().slice(0, 10);
-    const filename = `paynau-${scope}-${stamp}.${ext}`;
+    const filename = `psp-${scope}-${stamp}.${ext}`;
     simulateDownload(filename, `Export simulado de ${scope} (${fmt.toUpperCase()})`);
     toast.success(`Exportación lista — descargando ${filename}`);
   };

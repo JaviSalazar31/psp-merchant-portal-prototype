@@ -63,7 +63,7 @@ const days = (n: number) => n * 24 * 60 * 60 * 1000;
 export const MOCK_WEBHOOKS: MockWebhook[] = [
   {
     id: 'wh_1',
-    url: 'https://tacospancho.mx/api/webhooks/paynau',
+    url: 'https://tacospancho.mx/api/webhooks/psp',
     description: 'Endpoint principal de producción del backend de Tacos Pancho.',
     signingSecret: 'whsec_8KqLm2pVnQrYjW3tBcN4FgD7HsZpRvKwMnUiTjLp9XqYzAbCdEf',
     apiVersion: '2026-04-22',

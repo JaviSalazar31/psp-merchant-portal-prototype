@@ -103,13 +103,13 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
   const handleExportPdf = () => {
     const stamp = transaction.id.slice(0, 18);
     const blob = new Blob(
-      [`Comprobante simulado · Paynau\n\nID: ${transaction.id}\nMonto: ${formatCurrency(transaction.amount, transaction.currency)}\nEstado: ${meta.label}`],
+      [`Comprobante simulado · PSP\n\nID: ${transaction.id}\nMonto: ${formatCurrency(transaction.amount, transaction.currency)}\nEstado: ${meta.label}`],
       { type: 'application/pdf' },
     );
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `paynau-tx-${stamp}.pdf`;
+    a.download = `psp-tx-${stamp}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Comprobante exportado.');

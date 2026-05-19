@@ -14,9 +14,7 @@ export interface CreateWebhookPayload {
 
 interface WebhooksState {
   webhooks: MockWebhook[];
-  mode: 'sandbox' | 'production';
   saving: boolean;
-  setMode: (mode: 'sandbox' | 'production') => void;
   createWebhook: (payload: CreateWebhookPayload) => Promise<MockWebhook>;
   updateWebhook: (id: string, patch: Partial<Pick<MockWebhook, 'url' | 'description' | 'events' | 'status'>>) => Promise<void>;
   deleteWebhook: (id: string) => Promise<void>;
@@ -59,10 +57,7 @@ function buildTestDelivery(event: WebhookEventKey): MockWebhookDelivery {
 
 export const useWebhooksStore = create<WebhooksState>((set, get) => ({
   webhooks: MOCK_WEBHOOKS,
-  mode: 'sandbox',
   saving: false,
-
-  setMode: mode => set({ mode }),
 
   createWebhook: async ({ url, description, events }) => {
     set({ saving: true });
@@ -74,7 +69,6 @@ export const useWebhooksStore = create<WebhooksState>((set, get) => ({
       signingSecret: `whsec_${randomSecret(48)}`,
       apiVersion: '2026-04-22',
       status: 'Activo',
-      mode: get().mode,
       events,
       deliveries: [],
       createdAt: new Date(),

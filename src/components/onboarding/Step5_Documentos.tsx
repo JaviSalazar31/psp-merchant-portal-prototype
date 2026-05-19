@@ -22,14 +22,12 @@ function emptyCountryDocs(): CountryDocuments {
   return { single: {}, multi: {} };
 }
 
-function isCountryDocsComplete(
-  docs: CountryDocuments | undefined,
-  cryptoEnabled: boolean,
-): boolean {
+function isCountryDocsComplete(docs: CountryDocuments | undefined): boolean {
   if (!docs) return false;
   for (const doc of ONBOARDING_DOCUMENTS) {
     if (!doc.required) continue;
-    if (doc.conditional === 'crypto' && !cryptoEnabled) continue;
+    // En Fase 1 no hay documentos condicionales activos (la rama crypto se postergó a V2).
+    if (doc.conditional) continue;
     if (doc.maxFiles && doc.maxFiles > 1) {
       const list = docs.multi[doc.key];
       if (!list || list.length === 0) return false;
@@ -48,7 +46,6 @@ export function Step5Documentos() {
   const setActiveCountry = useOnboardingStore(s => s.setActiveCountry);
   const existing = useOnboardingStore(s => s.step5Data);
   const setStep5Data = useOnboardingStore(s => s.setStep5Data);
-  const step3Data = useOnboardingStore(s => s.step3Data);
 
   const [byCountry, setByCountry] = useState<Step5Data>(() => {
     const init: Step5Data = {};
@@ -62,7 +59,6 @@ export function Step5Documentos() {
 
   const current = activeCountry ?? countries[0];
   const docs = current ? byCountry[current] ?? emptyCountryDocs() : null;
-  const cryptoEnabled = !!(current && step3Data?.[current]?.cryptoEnabled);
 
   const setSingle = (key: string, file: UploadedDocument | null) => {
     if (!current) return;
@@ -88,8 +84,7 @@ export function Step5Documentos() {
 
   const onContinue = () => {
     for (const c of countries) {
-      const cCrypto = !!step3Data?.[c]?.cryptoEnabled;
-      if (!isCountryDocsComplete(byCountry[c], cCrypto)) {
+      if (!isCountryDocsComplete(byCountry[c])) {
         toast.error(`Faltan documentos obligatorios para ${c}.`);
         setActiveCountry(c);
         return;
@@ -119,8 +114,7 @@ export function Step5Documentos() {
   if (!docs || !current) return null;
 
   const sectionDocs = (section: 'kyc' | 'company' | 'fiscal' | 'ubo') =>
-    ONBOARDING_DOCUMENTS.filter(d => d.section === section)
-      .filter(d => !d.conditional || (d.conditional === 'crypto' && cryptoEnabled));
+    ONBOARDING_DOCUMENTS.filter(d => d.section === section && !d.conditional);
 
   const renderDoc = (key: string, label: string, required: boolean, maxFiles?: number, hint?: string) => {
     const isMulti = !!(maxFiles && maxFiles > 1);

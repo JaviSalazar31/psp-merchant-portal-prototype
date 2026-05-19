@@ -15,8 +15,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -36,7 +34,7 @@ import RenameApiKeyModal from './RenameApiKeyModal';
 import { useApiKeysStore } from '@/stores/apiKeysStore';
 import { toast } from '@/stores/toastStore';
 import { colors } from '@/theme/tokens';
-import type { ApiKeyMode, MockApiKey } from '@/mocks/apiKeys';
+import type { MockApiKey } from '@/mocks/apiKeys';
 
 function fmtDate(d: Date): string {
   const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -57,8 +55,6 @@ function maskedSecret(key: MockApiKey): string {
 
 export function ApiKeysList() {
   const keys = useApiKeysStore(s => s.keys);
-  const mode = useApiKeysStore(s => s.mode);
-  const setMode = useApiKeysStore(s => s.setMode);
   const rotateKey = useApiKeysStore(s => s.rotateKey);
   const deleteKey = useApiKeysStore(s => s.deleteKey);
 
@@ -71,17 +67,6 @@ export function ApiKeysList() {
   const [confirmRotate, setConfirmRotate] = useState<MockApiKey | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MockApiKey | null>(null);
   const [menu, setMenu] = useState<{ anchor: HTMLElement; key: MockApiKey } | null>(null);
-
-  const filteredKeys = keys.filter(k => k.mode === mode);
-
-  const handleModeChange = (_: unknown, newMode: ApiKeyMode | null) => {
-    if (!newMode) return;
-    if (newMode === 'production') {
-      toast.info('Las keys de Producción se generan después de completar tu activación.');
-      return;
-    }
-    setMode(newMode);
-  };
 
   const handleReveal = (key: MockApiKey) => {
     setMenu(null);
@@ -139,42 +124,9 @@ export function ApiKeysList() {
         </Button>
       </Stack>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-      >
-        <ToggleButtonGroup
-          value={mode}
-          exclusive
-          onChange={handleModeChange}
-          size="small"
-          sx={{
-            backgroundColor: colors.bgCard,
-            border: `1px solid ${colors.borderDefault}`,
-            borderRadius: 1.5,
-            '& .MuiToggleButton-root': {
-              border: 'none',
-              textTransform: 'none',
-              fontWeight: 600,
-              paddingX: 2,
-            },
-            '& .MuiToggleButton-root.Mui-selected': {
-              backgroundColor: colors.brandDarkest,
-              color: colors.textInverse,
-              '&:hover': { backgroundColor: colors.brandDarkest },
-            },
-          }}
-        >
-          <ToggleButton value="sandbox">Sandbox</ToggleButton>
-          <ToggleButton value="production">Producción</ToggleButton>
-        </ToggleButtonGroup>
-      </Stack>
-
-      <ContextBanner variant="warning">
-        Estás en modo <strong>Sandbox</strong>. Las API keys de este modo no procesan
-        transacciones reales. Las keys de Producción se generan después de completar tu
-        activación.
+      <ContextBanner variant="info">
+        Tus API keys actuales son de <strong>prueba</strong> y no procesan transacciones reales.
+        Las keys productivas se generan automáticamente cuando tu cuenta se activa.
       </ContextBanner>
 
       <TableContainer
@@ -212,7 +164,7 @@ export function ApiKeysList() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredKeys.map(key => {
+            {keys.map(key => {
               const isRevoked = key.status === 'Revocada';
               return (
                 <TableRow key={key.id} hover sx={{ opacity: isRevoked ? 0.55 : 1 }}>
@@ -305,12 +257,12 @@ export function ApiKeysList() {
                 </TableRow>
               );
             })}
-            {filteredKeys.length === 0 && (
+            {keys.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7}>
                   <Box sx={{ paddingY: 4, textAlign: 'center' }}>
                     <Typography variant="body2" color="text.secondary">
-                      No hay API Keys creadas en este modo. Empezá creando una nueva.
+                      Todavía no tenés API Keys. Empezá creando una nueva.
                     </Typography>
                   </Box>
                 </TableCell>

@@ -37,9 +37,6 @@ export interface BankAccountData {
   iban: string;
   swift: string;
   currency: string;
-  cryptoEnabled: boolean;
-  cryptoNetwork: string;
-  cryptoWallet: string;
 }
 export type Step3Data = Record<string, BankAccountData>;
 

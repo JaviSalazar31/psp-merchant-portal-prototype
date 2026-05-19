@@ -3,13 +3,13 @@ import CheckIcon from '@mui/icons-material/Check';
 import { colors } from '@/theme/tokens';
 
 export interface StepDef {
-  id: 1 | 2 | 3 | 4 | 5 | 6;
+  id: 1 | 2 | 3 | 4 | 5;
   label: string;
 }
 
 interface OnboardingStepperProps {
   steps: StepDef[];
-  currentStep: 1 | 2 | 3 | 4 | 5 | 6;
+  currentStep: 1 | 2 | 3 | 4 | 5;
   completedSteps: number[];
 }
 

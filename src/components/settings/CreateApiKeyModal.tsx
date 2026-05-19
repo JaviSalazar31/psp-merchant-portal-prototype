@@ -35,10 +35,10 @@ const TYPE_OPTIONS: { value: ApiKeyType; label: string; description: string; dis
 ];
 
 const EXPIRATION_OPTIONS: { value: ApiKeyExpiration; label: string }[] = [
-  { value: 'never', label: 'Sin expiración' },
   { value: '30d', label: '30 días' },
   { value: '90d', label: '90 días' },
-  { value: '1y', label: '1 año' },
+  { value: '180d', label: '180 días' },
+  { value: '365d', label: '365 días' },
 ];
 
 export function CreateApiKeyModal({ open, onClose, onCreated }: Props) {
@@ -47,13 +47,13 @@ export function CreateApiKeyModal({ open, onClose, onCreated }: Props) {
 
   const [name, setName] = useState('');
   const [type, setType] = useState<ApiKeyType>('publishable');
-  const [expiration, setExpiration] = useState<ApiKeyExpiration>('never');
+  const [expiration, setExpiration] = useState<ApiKeyExpiration>('90d');
 
   useEffect(() => {
     if (open) {
       setName('');
       setType('publishable');
-      setExpiration('never');
+      setExpiration('90d');
     }
   }, [open]);
 

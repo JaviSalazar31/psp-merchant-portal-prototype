@@ -12,8 +12,6 @@ import {
   Menu,
   MenuItem,
   Stack,
-  ToggleButton,
-  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -50,8 +48,6 @@ function lastDelivery(wh: MockWebhook): MockWebhook['deliveries'][number] | null
 
 export function WebhooksList() {
   const webhooks = useWebhooksStore(s => s.webhooks);
-  const mode = useWebhooksStore(s => s.mode);
-  const setMode = useWebhooksStore(s => s.setMode);
   const updateWebhook = useWebhooksStore(s => s.updateWebhook);
   const deleteWebhook = useWebhooksStore(s => s.deleteWebhook);
 
@@ -62,17 +58,6 @@ export function WebhooksList() {
   const [detailWebhook, setDetailWebhook] = useState<MockWebhook | null>(null);
   const [menu, setMenu] = useState<{ anchor: HTMLElement; webhook: MockWebhook } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MockWebhook | null>(null);
-
-  const filteredWebhooks = webhooks.filter(w => w.mode === mode);
-
-  const handleModeChange = (_: unknown, newMode: 'sandbox' | 'production' | null) => {
-    if (!newMode) return;
-    if (newMode === 'production') {
-      toast.info('Los webhooks de Producción se habilitan después de completar tu activación.');
-      return;
-    }
-    setMode(newMode);
-  };
 
   const handleToggleStatus = async (wh: MockWebhook) => {
     setMenu(null);
@@ -113,33 +98,6 @@ export function WebhooksList() {
         </Button>
       </Stack>
 
-      <ToggleButtonGroup
-        value={mode}
-        exclusive
-        onChange={handleModeChange}
-        size="small"
-        sx={{
-          backgroundColor: colors.bgCard,
-          border: `1px solid ${colors.borderDefault}`,
-          borderRadius: 1.5,
-          width: 'fit-content',
-          '& .MuiToggleButton-root': {
-            border: 'none',
-            textTransform: 'none',
-            fontWeight: 600,
-            paddingX: 2,
-          },
-          '& .MuiToggleButton-root.Mui-selected': {
-            backgroundColor: colors.brandDarkest,
-            color: colors.textInverse,
-            '&:hover': { backgroundColor: colors.brandDarkest },
-          },
-        }}
-      >
-        <ToggleButton value="sandbox">Sandbox</ToggleButton>
-        <ToggleButton value="production">Producción</ToggleButton>
-      </ToggleButtonGroup>
-
       <ContextBanner variant="info">
         Tus endpoints reciben un POST firmado con HMAC SHA256 usando el{' '}
         <strong>signing secret</strong> de cada webhook. Verificá la firma del header{' '}
@@ -147,7 +105,7 @@ export function WebhooksList() {
       </ContextBanner>
 
       <Stack spacing={2}>
-        {filteredWebhooks.map(wh => {
+        {webhooks.map(wh => {
           const last = lastDelivery(wh);
           const rate = successRate(wh);
           const hasIssues = wh.deliveryStats24h.failed > 0;
@@ -323,7 +281,7 @@ export function WebhooksList() {
           );
         })}
 
-        {filteredWebhooks.length === 0 && (
+        {webhooks.length === 0 && (
           <Card>
             <CardContent sx={{ paddingY: 6 }}>
               <Stack spacing={1.5} alignItems="center" sx={{ textAlign: 'center' }}>

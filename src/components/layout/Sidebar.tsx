@@ -1,13 +1,10 @@
-import { useEffect, useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Box, Collapse, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { NavLink } from 'react-router-dom';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Logo from '@/components/common/Logo';
@@ -18,22 +15,16 @@ export const SIDEBAR_WIDTH_EXPANDED = 240;
 export const SIDEBAR_WIDTH_COLLAPSED = 72;
 
 interface SidebarItem {
-  to?: string;
+  to: string;
   label: string;
   icon: React.ReactNode;
-  children?: { to: string; label: string }[];
+  /** Otras rutas que deben marcar este item como activo (ej: /transactions/pay-in → /transactions/...). */
+  matchPrefix?: string;
 }
 
 const ITEMS: SidebarItem[] = [
   { to: '/home', label: 'Home', icon: <HomeOutlinedIcon /> },
-  {
-    label: 'Transactions',
-    icon: <SwapHorizIcon />,
-    children: [
-      { to: '/transactions/pay-in', label: 'Pay-In' },
-      { to: '/transactions/pay-out', label: 'Pay-Out' },
-    ],
-  },
+  { to: '/transactions/pay-in', label: 'Transactions', icon: <SwapHorizIcon />, matchPrefix: '/transactions' },
   { to: '/settlements', label: 'Settlements', icon: <AccountBalanceWalletOutlinedIcon /> },
   { to: '/users', label: 'Users', icon: <GroupOutlinedIcon /> },
   { to: '/roles', label: 'Roles', icon: <ShieldOutlinedIcon /> },
@@ -47,13 +38,6 @@ interface SidebarProps {
 export function Sidebar({ variant, onNavigate }: SidebarProps) {
   const collapsed = useUIStore(s => s.sidebarCollapsed) && variant === 'permanent';
   const toggle = useUIStore(s => s.toggleSidebar);
-  const location = useLocation();
-
-  const [txOpen, setTxOpen] = useState(() => location.pathname.startsWith('/transactions'));
-
-  useEffect(() => {
-    if (location.pathname.startsWith('/transactions')) setTxOpen(true);
-  }, [location.pathname]);
 
   const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
 
@@ -92,68 +76,41 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
               justifyContent: 'center',
               color: colors.textInverse,
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: 13,
+              letterSpacing: 0.5,
               position: 'relative',
             }}
           >
-            p
+            PSP
             <Box
               sx={{
                 position: 'absolute',
-                top: 6,
-                right: 6,
-                width: 6,
-                height: 6,
+                top: 5,
+                right: 5,
+                width: 5,
+                height: 5,
                 borderRadius: '50%',
                 backgroundColor: colors.brandPrimary,
               }}
             />
           </Box>
         ) : (
-          <Logo width={108} />
+          <Logo width={96} />
         )}
       </Box>
 
       <Stack sx={{ flex: 1, paddingY: 1.5, paddingX: 1, gap: 0.25, overflowY: 'auto' }}>
-        {ITEMS.map(item => {
-          if (item.children) {
-            const isActive = location.pathname.startsWith('/transactions');
-            return (
-              <Box key={item.label}>
-                <SidebarRow
-                  icon={item.icon}
-                  label={item.label}
-                  active={isActive}
-                  collapsed={collapsed}
-                  rightSlot={!collapsed && (txOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />)}
-                  onClick={() => setTxOpen(o => !o)}
-                />
-                <Collapse in={txOpen && !collapsed} timeout="auto" unmountOnExit>
-                  <Stack sx={{ pl: 4.5, pt: 0.25, gap: 0.25 }}>
-                    {item.children.map(child => (
-                      <SidebarSubItem
-                        key={child.to}
-                        to={child.to}
-                        label={child.label}
-                        onNavigate={onNavigate}
-                      />
-                    ))}
-                  </Stack>
-                </Collapse>
-              </Box>
-            );
-          }
-          return (
-            <SidebarRow
-              key={item.to}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-            />
-          );
-        })}
+        {ITEMS.map(item => (
+          <SidebarRow
+            key={item.to}
+            icon={item.icon}
+            label={item.label}
+            to={item.to}
+            matchPrefix={item.matchPrefix}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+          />
+        ))}
       </Stack>
 
       {variant === 'permanent' && (
@@ -180,67 +137,27 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
 interface RowProps {
   icon: React.ReactNode;
   label: string;
-  to?: string;
-  active?: boolean;
+  to: string;
+  matchPrefix?: string;
   collapsed: boolean;
-  rightSlot?: React.ReactNode;
-  onClick?: () => void;
   onNavigate?: () => void;
 }
 
-function SidebarRow({ icon, label, to, active, collapsed, rightSlot, onClick, onNavigate }: RowProps) {
-  const content = (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1.5}
-      sx={({ palette }) => ({
-        paddingY: 1,
-        paddingX: 1.25,
-        borderRadius: 1.5,
-        cursor: 'pointer',
-        position: 'relative',
-        color: palette.text.primary,
-        backgroundColor: 'transparent',
-        '&.is-active': {
-          backgroundColor: 'rgba(124, 255, 69, 0.12)',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            left: 0,
-            top: 6,
-            bottom: 6,
-            width: 3,
-            borderRadius: 999,
-            backgroundColor: colors.brandPrimary,
-          },
-        },
-        '&:hover': { backgroundColor: colors.bgSubtle },
-      })}
-      className={active ? 'is-active' : undefined}
+function SidebarRow({ icon, label, to, matchPrefix, collapsed, onNavigate }: RowProps) {
+  return (
+    <NavLink
+      to={to}
+      onClick={() => onNavigate?.()}
+      style={{ textDecoration: 'none', color: 'inherit' }}
     >
-      <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>{icon}</Box>
-      {!collapsed && (
-        <>
-          <Typography variant="body2" sx={{ fontWeight: active ? 600 : 500, flex: 1 }}>
-            {label}
-          </Typography>
-          {rightSlot}
-        </>
-      )}
-    </Stack>
-  );
-
-  if (to) {
-    return (
-      <NavLink
-        to={to}
-        onClick={() => onNavigate?.()}
-        style={{ textDecoration: 'none', color: 'inherit' }}
-      >
-        {({ isActive }) => (
-          <Box className={isActive ? 'wrapper-active' : ''}>
-            {/* Reuse same structure via SidebarRow inner; here we re-render with isActive */}
+      {({ isActive }) => {
+        const active =
+          isActive ||
+          (matchPrefix
+            ? window.location.pathname.startsWith(matchPrefix)
+            : false);
+        return (
+          <Box>
             <Stack
               direction="row"
               alignItems="center"
@@ -252,8 +169,8 @@ function SidebarRow({ icon, label, to, active, collapsed, rightSlot, onClick, on
                 cursor: 'pointer',
                 position: 'relative',
                 color: colors.textPrimary,
-                backgroundColor: isActive ? 'rgba(124, 255, 69, 0.12)' : 'transparent',
-                '&::before': isActive
+                backgroundColor: active ? 'rgba(124, 255, 69, 0.12)' : 'transparent',
+                '&::before': active
                   ? {
                       content: '""',
                       position: 'absolute',
@@ -265,64 +182,21 @@ function SidebarRow({ icon, label, to, active, collapsed, rightSlot, onClick, on
                       backgroundColor: colors.brandPrimary,
                     }
                   : undefined,
-                '&:hover': { backgroundColor: isActive ? 'rgba(124, 255, 69, 0.12)' : colors.bgSubtle },
+                '&:hover': { backgroundColor: active ? 'rgba(124, 255, 69, 0.12)' : colors.bgSubtle },
               }}
             >
               <Tooltip title={collapsed ? label : ''} placement="right">
                 <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>{icon}</Box>
               </Tooltip>
               {!collapsed && (
-                <Typography variant="body2" sx={{ fontWeight: isActive ? 600 : 500, flex: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: active ? 600 : 500, flex: 1 }}>
                   {label}
                 </Typography>
               )}
             </Stack>
           </Box>
-        )}
-      </NavLink>
-    );
-  }
-
-  return (
-    <Box onClick={onClick}>
-      <Tooltip title={collapsed ? label : ''} placement="right">
-        {content}
-      </Tooltip>
-    </Box>
-  );
-}
-
-function SidebarSubItem({
-  to,
-  label,
-  onNavigate,
-}: {
-  to: string;
-  label: string;
-  onNavigate?: () => void;
-}) {
-  return (
-    <NavLink
-      to={to}
-      onClick={() => onNavigate?.()}
-      style={{ textDecoration: 'none', color: 'inherit' }}
-    >
-      {({ isActive }) => (
-        <Box
-          sx={{
-            paddingY: 0.75,
-            paddingX: 1.25,
-            borderRadius: 1.5,
-            color: isActive ? colors.brandPrimaryDark : colors.textSecondary,
-            fontSize: 13,
-            fontWeight: isActive ? 600 : 500,
-            cursor: 'pointer',
-            '&:hover': { backgroundColor: colors.bgSubtle },
-          }}
-        >
-          {label}
-        </Box>
-      )}
+        );
+      }}
     </NavLink>
   );
 }

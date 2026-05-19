@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Checkbox,
-  Collapse,
-  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -14,14 +11,10 @@ import {
 import { WizardFooter } from './OnboardingLayout';
 import SectionDivider from './SectionDivider';
 import CountryPills from '@/components/common/CountryPills';
-import ContextBanner from '@/components/common/ContextBanner';
 import { COUNTRIES } from '@/constants/countries';
 import { CURRENCIES } from '@/constants/currencies';
 import { useOnboardingStore, type BankAccountData, type Step3Data } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
-import { colors } from '@/theme/tokens';
-
-const CRYPTO_NETWORKS = ['USDT (TRC-20)', 'USDT (ERC-20)', 'USDC (ERC-20)', 'USDC (Solana)', 'BTC', 'ETH'];
 
 function emptyBank(country: string): BankAccountData {
   return {
@@ -34,23 +27,19 @@ function emptyBank(country: string): BankAccountData {
     iban: '',
     swift: '',
     currency: 'USD',
-    cryptoEnabled: false,
-    cryptoNetwork: '',
-    cryptoWallet: '',
   };
 }
 
 function isBankValid(b: BankAccountData | undefined): boolean {
   if (!b) return false;
-  const baseValid =
+  return (
     !!b.bankCountry &&
     !!b.bankName &&
     !!b.accountNumber &&
     !!b.accountHolder &&
     !!b.currency &&
-    (!!b.routingNumber || !!b.iban);
-  if (!b.cryptoEnabled) return baseValid;
-  return baseValid && !!b.cryptoNetwork && !!b.cryptoWallet;
+    (!!b.routingNumber || !!b.iban)
+  );
 }
 
 export function Step3InformacionBancaria() {
@@ -109,23 +98,6 @@ export function Step3InformacionBancaria() {
       {countries.length > 1 && (
         <CountryPills countries={countries} active={current} onChange={setActiveCountry} />
       )}
-
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={bank.cryptoEnabled}
-            onChange={e => setField('cryptoEnabled', e.target.checked)}
-            sx={{ color: colors.borderStrong, '&.Mui-checked': { color: colors.brandPrimary } }}
-          />
-        }
-        label="Habilitar liquidación en Cripto"
-      />
-
-      <ContextBanner variant="info">
-        La liquidación puede hacerse en moneda fiduciaria usando la información bancaria proporcionada,
-        y/o en Cripto seleccionando la opción.{' '}
-        <Box component="span" sx={{ fontWeight: 600 }}>Debés elegir al menos un método.</Box>
-      </ContextBanner>
 
       <SectionDivider>CUENTA BANCARIA</SectionDivider>
 
@@ -216,38 +188,6 @@ export function Step3InformacionBancaria() {
           </TextField>
         </Grid>
       </Grid>
-
-      <Collapse in={bank.cryptoEnabled} timeout="auto" unmountOnExit>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          <SectionDivider>BILLETERA CRIPTO</SectionDivider>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                select
-                label="Red blockchain *"
-                value={bank.cryptoNetwork}
-                onChange={e => setField('cryptoNetwork', e.target.value)}
-                error={bank.cryptoEnabled && !bank.cryptoNetwork}
-              >
-                {CRYPTO_NETWORKS.map(n => (
-                  <MenuItem key={n} value={n}>
-                    {n}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Dirección de wallet *"
-                value={bank.cryptoWallet}
-                onChange={e => setField('cryptoWallet', e.target.value)}
-                error={bank.cryptoEnabled && !bank.cryptoWallet}
-                placeholder="0x... o TR..."
-              />
-            </Grid>
-          </Grid>
-        </Stack>
-      </Collapse>
 
       <WizardFooter
         onBack={() => navigate('/onboarding/step-2')}

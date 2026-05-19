@@ -9,7 +9,6 @@ export interface ProfilePreferences {
 
 export interface ProfileNotifications {
   transactionAuthorized: boolean;
-  disputeOpened: boolean;
   settlementProcessed: boolean;
   dailySummary: boolean;
 }
@@ -49,7 +48,6 @@ export const MOCK_PROFILE: ProfileData = {
   },
   notifications: {
     transactionAuthorized: true,
-    disputeOpened: true,
     settlementProcessed: true,
     dailySummary: false,
   },

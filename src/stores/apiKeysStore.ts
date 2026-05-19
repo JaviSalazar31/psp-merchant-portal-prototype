@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import {
   MOCK_API_KEYS,
-  type ApiKeyMode,
   type ApiKeyType,
   type MockApiKey,
 } from '@/mocks/apiKeys';
 
-export type ApiKeyExpiration = 'never' | '30d' | '90d' | '1y';
+// Las cuatro vigencias soportadas por la definición productiva.
+export type ApiKeyExpiration = '30d' | '90d' | '180d' | '365d';
 
 export interface CreateApiKeyPayload {
   name: string;
@@ -16,9 +16,7 @@ export interface CreateApiKeyPayload {
 
 interface ApiKeysState {
   keys: MockApiKey[];
-  mode: ApiKeyMode;
   saving: boolean;
-  setMode: (mode: ApiKeyMode) => void;
   createKey: (payload: CreateApiKeyPayload) => Promise<MockApiKey>;
   renameKey: (id: string, name: string) => Promise<void>;
   rotateKey: (id: string) => Promise<MockApiKey | null>;
@@ -43,13 +41,12 @@ function randomChars(n: number) {
   return out;
 }
 
-function expirationToDate(exp: ApiKeyExpiration): Date | null {
-  if (exp === 'never') return null;
+function expirationToDate(exp: ApiKeyExpiration): Date {
   const now = new Date();
-  if (exp === '30d') return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  if (exp === '90d') return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-  // 1 año
-  return new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const days =
+    exp === '30d' ? 30 : exp === '90d' ? 90 : exp === '180d' ? 180 : 365;
+  return new Date(now.getTime() + days * dayMs);
 }
 
 function buildFullKey(type: ApiKeyType): { prefix: string; fullKey: string; suffix: string } {
@@ -61,10 +58,7 @@ function buildFullKey(type: ApiKeyType): { prefix: string; fullKey: string; suff
 
 export const useApiKeysStore = create<ApiKeysState>((set, get) => ({
   keys: MOCK_API_KEYS,
-  mode: 'sandbox',
   saving: false,
-
-  setMode: mode => set({ mode }),
 
   createKey: async ({ name, type, expiration }) => {
     set({ saving: true });
@@ -74,7 +68,6 @@ export const useApiKeysStore = create<ApiKeysState>((set, get) => ({
       id: generateId(),
       name,
       type,
-      mode: get().mode,
       status: 'Activa',
       prefix,
       fullKey,
@@ -109,7 +102,6 @@ export const useApiKeysStore = create<ApiKeysState>((set, get) => ({
       id: generateId(),
       name: original.name,
       type: original.type,
-      mode: original.mode,
       status: 'Activa',
       prefix,
       fullKey,

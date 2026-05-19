@@ -158,12 +158,6 @@ export function Step6EnviarRevision() {
                 value={`**** **** **** ${bank.accountNumber.slice(-4) || '----'} · ${bank.accountHolder}`}
               />
               <KV label="Moneda" value={bank.currency} />
-              {bank.cryptoEnabled && (
-                <KV
-                  label="Wallet cripto"
-                  value={`${bank.cryptoNetwork} · ${bank.cryptoWallet.slice(0, 8)}…${bank.cryptoWallet.slice(-6)}`}
-                />
-              )}
             </Box>
           ))}
       </SummaryAccordion>

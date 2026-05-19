@@ -15,8 +15,6 @@ import PasswordResetConfirmPage from '@/pages/PasswordResetConfirmPage';
 import ReviewPendingPage from '@/pages/ReviewPendingPage';
 import HomePage from '@/pages/HomePage';
 import TransactionsPayInPage from '@/pages/TransactionsPayInPage';
-import TransactionsPayOutPage from '@/pages/TransactionsPayOutPage';
-import CreatePayOutPage from '@/pages/CreatePayOutPage';
 import SettlementsPage from '@/pages/SettlementsPage';
 import UsersPage from '@/pages/UsersPage';
 import RolesPage from '@/pages/RolesPage';
@@ -85,9 +83,7 @@ export default function App() {
             <Route path="/transactions" element={<TransactionsLayout />}>
               <Route index element={<Navigate to="pay-in" replace />} />
               <Route path="pay-in" element={<TransactionsPayInPage />} />
-              <Route path="pay-out" element={<TransactionsPayOutPage />} />
             </Route>
-            <Route path="/transactions/pay-out/create" element={<CreatePayOutPage />} />
 
             <Route path="/settlements" element={<SettlementsPage />} />
             <Route path="/users" element={<UsersPage />} />

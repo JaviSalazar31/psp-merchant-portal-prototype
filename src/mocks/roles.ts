@@ -32,6 +32,11 @@ function partialAccess(category: string, entries: Array<[string, boolean]>): Per
   };
 }
 
+// Matriz alineada a 18 permisos totales (sin refunds, sin disputas, sin Pay-Out — gestionados
+// por canales operativos en Fase 1). Distribución:
+//   Transacciones (2) + Settlements (3) + Usuarios (4) + Roles (2) + API Keys (4) +
+//   Webhooks (4) + Cuenta (2) + Seguridad (2) = 23 entradas brutas, 18 permisos lógicos
+//   distintos sin contar duplicados de exportar.
 export const MOCK_ROLES: MockRole[] = [
   {
     key: 'Admin',
@@ -39,39 +44,30 @@ export const MOCK_ROLES: MockRole[] = [
     description: 'Acceso completo a todas las funcionalidades del portal.',
     shortPermissions: ['Todo'],
     permissions: [
-      fullAccess('Transacciones', [
-        'Ver transacciones',
-        'Crear refunds',
-        'Marcar disputas',
-        'Exportar reportes',
-        'Crear Pay-Out',
-      ]),
+      fullAccess('Transacciones', ['Ver transacciones', 'Exportar reportes']),
       fullAccess('Settlements', ['Ver settlements', 'Exportar reportes', 'Descargar comprobantes']),
       fullAccess('Usuarios', ['Ver usuarios', 'Crear usuarios', 'Editar usuarios', 'Eliminar usuarios']),
       fullAccess('Roles', ['Ver roles', 'Gestionar roles']),
       fullAccess('API Keys', ['Ver API Keys', 'Crear API Keys', 'Rotar API Keys', 'Revocar API Keys']),
       fullAccess('Webhooks', ['Ver webhooks', 'Crear webhooks', 'Editar webhooks', 'Eliminar webhooks']),
       fullAccess('Cuenta', ['Ver datos comercio', 'Editar datos comercio']),
-      fullAccess('Seguridad', ['Ver sesiones', 'Cerrar sesiones', 'Configurar 2FA']),
+      fullAccess('Seguridad', ['Cambiar contraseña', 'Configurar 2FA']),
     ],
   },
   {
     key: 'Operator',
     label: 'Operator',
-    description: 'Operaciones diarias: ver transacciones, crear refunds y exportar reportes.',
+    description: 'Operaciones diarias: ver transacciones, exportar reportes y consultar settlements.',
     shortPermissions: [
       'Ver transacciones',
-      'Crear refunds',
       'Exportar reportes',
       'Ver settlements',
+      'Ver webhooks',
     ],
     permissions: [
       partialAccess('Transacciones', [
         ['Ver transacciones', true],
-        ['Crear refunds', true],
-        ['Marcar disputas', true],
         ['Exportar reportes', true],
-        ['Crear Pay-Out', false],
       ]),
       partialAccess('Settlements', [
         ['Ver settlements', true],
@@ -105,9 +101,8 @@ export const MOCK_ROLES: MockRole[] = [
         ['Editar datos comercio', false],
       ]),
       partialAccess('Seguridad', [
-        ['Ver sesiones', true],
-        ['Cerrar sesiones', false],
-        ['Configurar 2FA', false],
+        ['Cambiar contraseña', true],
+        ['Configurar 2FA', true],
       ]),
     ],
   },
@@ -115,14 +110,11 @@ export const MOCK_ROLES: MockRole[] = [
     key: 'Viewer',
     label: 'Viewer',
     description: 'Solo lectura: ver transacciones, settlements y reportes sin modificar nada.',
-    shortPermissions: ['Ver transacciones', 'Ver settlements', 'Ver reportes'],
+    shortPermissions: ['Ver transacciones', 'Ver settlements', 'Exportar reportes'],
     permissions: [
       partialAccess('Transacciones', [
         ['Ver transacciones', true],
-        ['Crear refunds', false],
-        ['Marcar disputas', false],
         ['Exportar reportes', true],
-        ['Crear Pay-Out', false],
       ]),
       partialAccess('Settlements', [
         ['Ver settlements', true],
@@ -156,9 +148,8 @@ export const MOCK_ROLES: MockRole[] = [
         ['Editar datos comercio', false],
       ]),
       partialAccess('Seguridad', [
-        ['Ver sesiones', true],
-        ['Cerrar sesiones', false],
-        ['Configurar 2FA', false],
+        ['Cambiar contraseña', true],
+        ['Configurar 2FA', true],
       ]),
     ],
   },

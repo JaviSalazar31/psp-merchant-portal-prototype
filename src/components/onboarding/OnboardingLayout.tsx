@@ -10,13 +10,14 @@ import OnboardingStepper, { type StepDef } from './OnboardingStepper';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { colors } from '@/theme/tokens';
 
+// El wizard productivo son 5 pasos exactos. La pantalla `/onboarding/step-6` se conserva
+// como vista intermedia de revisión/submit posterior al paso 5 pero no se cuenta en el stepper.
 const STEPS: StepDef[] = [
   { id: 1, label: 'Datos de la Empresa' },
   { id: 2, label: 'Dirección Comercial' },
   { id: 3, label: 'Información Bancaria' },
   { id: 4, label: 'Contactos y Escalaciones' },
   { id: 5, label: 'Documentos' },
-  { id: 6, label: 'Enviar para revisión' },
 ];
 
 interface FooterProps {
@@ -99,10 +100,15 @@ export function OnboardingLayout({ children }: { children?: ReactNode }) {
   if (step4Data) completedSteps.push(4);
   if (step5Data) completedSteps.push(5);
 
+  // En la pantalla de review (urlStep=6) marcamos el Paso 5 como activo y todos los previos
+  // como completados. El stepper solo muestra 5 entradas.
+  const stepperCurrent: 1 | 2 | 3 | 4 | 5 = urlStep === 6 ? 5 : urlStep;
+  const stepperCompleted = urlStep === 6 ? [1, 2, 3, 4, 5] : completedSteps;
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: colors.bgPage, display: 'flex', flexDirection: 'column' }}>
       <WizardHeader />
-      <OnboardingStepper steps={STEPS} currentStep={urlStep} completedSteps={completedSteps} />
+      <OnboardingStepper steps={STEPS} currentStep={stepperCurrent} completedSteps={stepperCompleted} />
 
       <Box
         sx={{

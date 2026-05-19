@@ -29,7 +29,6 @@ export interface MockWebhook {
   signingSecret: string;
   apiVersion: string;
   status: 'Activo' | 'Pausado';
-  mode: 'sandbox' | 'production';
   events: WebhookEventKey[];
   deliveries: MockWebhookDelivery[];
   createdAt: Date;
@@ -69,7 +68,6 @@ export const MOCK_WEBHOOKS: MockWebhook[] = [
     signingSecret: 'whsec_8KqLm2pVnQrYjW3tBcN4FgD7HsZpRvKwMnUiTjLp9XqYzAbCdEf',
     apiVersion: '2026-04-22',
     status: 'Activo',
-    mode: 'sandbox',
     events: ['transaction.created', 'transaction.authorized', 'transaction.failed'],
     createdAt: new Date(today - days(35)),
     deliveryStats24h: { total: 28, successful: 27, failed: 1 },
@@ -161,7 +159,6 @@ export const MOCK_WEBHOOKS: MockWebhook[] = [
     signingSecret: 'whsec_3MnPqLrStUvWxYzAbCdEfGhJkLm2pVnQrYjW3tBcN4FgD7Hs',
     apiVersion: '2026-04-22',
     status: 'Activo',
-    mode: 'sandbox',
     events: [
       'transaction.created',
       'transaction.authorized',

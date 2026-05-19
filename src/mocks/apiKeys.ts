@@ -1,12 +1,10 @@
 export type ApiKeyType = 'publishable' | 'secret' | 'restricted';
 export type ApiKeyStatus = 'Activa' | 'Revocada';
-export type ApiKeyMode = 'sandbox' | 'production';
 
 export interface MockApiKey {
   id: string;
   name: string;
   type: ApiKeyType;
-  mode: ApiKeyMode;
   status: ApiKeyStatus;
   prefix: string;
   // Para publishable mostramos la key completa. Para secret guardamos suffix y revelamos al usuario.
@@ -21,13 +19,13 @@ const today = new Date('2026-05-15T12:00:00').getTime();
 const days = (n: number) => n * 24 * 60 * 60 * 1000;
 const hours = (n: number) => n * 60 * 60 * 1000;
 
-// En el prototipo solo existe modo Sandbox. Las keys de Producción se generan post-activación.
+// En Fase 1 no se expone toggle Sandbox/Producción: el ambiente se maneja por la vigencia de
+// cada key (`expiresAt`). El comercio empieza con keys de test y al activarse recibe las de prod.
 export const MOCK_API_KEYS: MockApiKey[] = [
   {
     id: 'apik_1',
     name: 'Default publishable',
     type: 'publishable',
-    mode: 'sandbox',
     status: 'Activa',
     prefix: 'pk_test_',
     fullKey: 'pk_test_4eC39HqLyjWDarjtT1zdp7dcAtJxQXz8VnLp',
@@ -40,7 +38,6 @@ export const MOCK_API_KEYS: MockApiKey[] = [
     id: 'apik_2',
     name: 'Default secret',
     type: 'secret',
-    mode: 'sandbox',
     status: 'Activa',
     prefix: 'sk_test_',
     fullKey: 'sk_test_51HQK3xLm2pVnQrYjW8tBcN4FgD7HsZpRvKwMnUiTjLp9XqYzBcDfGhJ',

@@ -250,25 +250,6 @@ export function ProfileForm() {
           <FormControlLabel
             control={
               <Checkbox
-                checked={notifications.disputeOpened}
-                onChange={e => handleNotifToggle('disputeOpened', e.target.checked)}
-                disabled={saving}
-              />
-            }
-            label={
-              <Stack spacing={0.25}>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  Disputas abiertas
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Alerta inmediata cuando un cliente inicia una disputa.
-                </Typography>
-              </Stack>
-            }
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
                 checked={notifications.settlementProcessed}
                 onChange={e => handleNotifToggle('settlementProcessed', e.target.checked)}
                 disabled={saving}

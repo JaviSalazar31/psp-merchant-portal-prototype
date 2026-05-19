@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ViewColumnOutlinedIcon from '@mui/icons-material/ViewColumnOutlined';
-import AddIcon from '@mui/icons-material/Add';
 import type { GridColumnVisibilityModel } from '@mui/x-data-grid';
 import TransactionFilterBar from './TransactionFilterBar';
 import TransactionKpiCards from './TransactionKpiCards';
@@ -19,11 +17,10 @@ import { MOCK_TRANSACTIONS, type MockTransaction } from '@/mocks/transactions';
 import { colors } from '@/theme/tokens';
 
 interface Props {
-  scope: 'pay-in' | 'pay-out';
+  scope: 'pay-in';
 }
 
 export function TransactionsTabPage({ scope }: Props) {
-  const navigate = useNavigate();
   const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
   const [activeViewKey, setActiveViewKey] = useState<string>('all');
   const [columnVisibility, setColumnVisibility] = useState<GridColumnVisibilityModel>(DEFAULT_VISIBLE_COLUMNS);
@@ -58,20 +55,6 @@ export function TransactionsTabPage({ scope }: Props) {
           {filtered.length === 1 ? 'resultado' : 'resultados'} {activeFilters ? 'con los filtros aplicados' : 'encontrados'}
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {scope === 'pay-out' && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/transactions/pay-out/create')}
-              sx={{
-                backgroundColor: colors.brandPrimary,
-                color: colors.brandDarkest,
-                '&:hover': { backgroundColor: '#5DE82A' },
-              }}
-            >
-              Crear Pay-Out
-            </Button>
-          )}
           <Button
             variant="outlined"
             startIcon={<FilterListIcon fontSize="small" />}

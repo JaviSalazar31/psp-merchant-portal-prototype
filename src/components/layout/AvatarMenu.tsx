@@ -46,9 +46,9 @@ const ITEMS = [
 // La traducción real de la UI queda fuera del MVP (es Fase 11); por ahora la
 // selección guarda preferencia y muestra un aviso para English / Português.
 const LANGUAGES: { code: Language; label: string; short: string }[] = [
-  { code: 'es', label: 'Español rioplatense', short: 'Español' },
+  { code: 'es', label: 'Español', short: 'Español' },
   { code: 'en', label: 'English', short: 'English' },
-  { code: 'pt-BR', label: 'Português brasileiro', short: 'Português' },
+  { code: 'pt-BR', label: 'Português (Brasil)', short: 'Português' },
 ];
 
 const COMING_SOON_TOAST: Partial<Record<Language, string>> = {

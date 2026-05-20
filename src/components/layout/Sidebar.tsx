@@ -96,18 +96,17 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
               alignItems: 'center',
               justifyContent: 'center',
               color: colors.textInverse,
-              fontWeight: 700,
-              fontSize: 13,
-              letterSpacing: 0.5,
+              fontWeight: 800,
+              fontSize: 18,
               position: 'relative',
             }}
           >
-            PSP
+            P
             <Box
               sx={{
                 position: 'absolute',
-                top: 5,
-                right: 5,
+                top: 8,
+                right: 9,
                 width: 5,
                 height: 5,
                 borderRadius: '50%',
@@ -116,7 +115,7 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
             />
           </Box>
         ) : (
-          <Logo width={96} />
+          <Logo width={68} />
         )}
       </Box>
 

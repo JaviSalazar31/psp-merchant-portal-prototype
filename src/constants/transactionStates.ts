@@ -19,10 +19,12 @@ export interface TransactionStateMeta {
   bannerVariant: 'success' | 'info' | 'warning' | 'error' | 'neutral' | null;
 }
 
+// Los labels de estado se muestran siempre en inglés por consistencia de marca.
+// Las descripciones (prosa contextual) se mantienen en español rioplatense.
 export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMeta> = {
   CREADO: {
     key: 'CREADO',
-    label: 'Creado',
+    label: 'Created',
     description: 'Transacción creada exitosamente',
     bg: colors.statusCreado.bg,
     fg: colors.statusCreado.fg,
@@ -30,7 +32,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   PENDIENTE: {
     key: 'PENDIENTE',
-    label: 'Pendiente',
+    label: 'Pending',
     description: 'Esperando confirmación del partner de pago',
     bg: colors.statusPendiente.bg,
     fg: colors.statusPendiente.fg,
@@ -38,7 +40,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   EN_REVISION: {
     key: 'EN_REVISION',
-    label: 'En revisión',
+    label: 'Under Review',
     description: 'Alta riesgo, requiere revisión manual',
     bg: colors.statusEnRevision.bg,
     fg: colors.statusEnRevision.fg,
@@ -46,7 +48,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   AUTORIZADO: {
     key: 'AUTORIZADO',
-    label: 'Autorizado',
+    label: 'Authorized',
     description: 'Pago autorizado por el partner',
     bg: colors.statusAutorizado.bg,
     fg: colors.statusAutorizado.fg,
@@ -54,7 +56,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   EN_DISPUTA: {
     key: 'EN_DISPUTA',
-    label: 'En disputa',
+    label: 'In Dispute',
     description: 'Tarjetahabiente disputó el pago',
     bg: colors.statusEnDisputa.bg,
     fg: colors.statusEnDisputa.fg,
@@ -62,7 +64,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   REEMBOLSADO: {
     key: 'REEMBOLSADO',
-    label: 'Reembolsado',
+    label: 'Refunded',
     description: 'Reembolso aprobado y procesado',
     bg: colors.statusReembolsado.bg,
     fg: colors.statusReembolsado.fg,
@@ -70,7 +72,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   RECHAZADO: {
     key: 'RECHAZADO',
-    label: 'Rechazado',
+    label: 'Rejected',
     description: 'Rechazado tras revisión',
     bg: colors.statusRechazado.bg,
     fg: colors.statusRechazado.fg,
@@ -78,7 +80,7 @@ export const TRANSACTION_STATES: Record<TransactionStatusKey, TransactionStateMe
   },
   FALLIDO: {
     key: 'FALLIDO',
-    label: 'Fallido',
+    label: 'Failed',
     description: 'Error en envío o procesamiento',
     bg: colors.statusFallido.bg,
     fg: colors.statusFallido.fg,

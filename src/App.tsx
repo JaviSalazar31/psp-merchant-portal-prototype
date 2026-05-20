@@ -22,6 +22,7 @@ import UsersPage from '@/pages/UsersPage';
 import AccountPage from '@/pages/AccountPage';
 import SecurityCenterPage from '@/pages/SecurityCenterPage';
 import DevelopersPage from '@/pages/DevelopersPage';
+import NotificationChannelsPage from '@/pages/NotificationChannelsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import CompanyProfilePage from '@/pages/CompanyProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="/security" element={<SecurityCenterPage />} />
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/notifications" element={<NotificationChannelsPage />} />
             <Route path="/profile/wizard" element={<CompanyProfilePage />} />
           </Route>
 

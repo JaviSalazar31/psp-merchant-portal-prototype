@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Tab, Tabs, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import ApiKeysList from '@/components/settings/ApiKeysList';
 import WebhooksList from '@/components/settings/WebhooksList';
@@ -9,6 +9,10 @@ import { colors } from '@/theme/tokens';
 /**
  * Módulo /developers — unifica API Keys y Canales de notificación en una sola vista con tabs.
  * Sólo disponible una vez que el comercio fue aprobado por Backoffice.
+ *
+ * NOTA: en el portal productivo este módulo se elimina y los canales se acceden
+ * desde /profile/notifications. Se mantiene acá solo para validación visual de
+ * QA UX/UI (sin link en sidebar ni en avatar dropdown — acceso únicamente por URL).
  */
 export default function DevelopersPage() {
   const user = useAuthStore(s => s.user);
@@ -25,10 +29,18 @@ export default function DevelopersPage() {
     </Stack>
   );
 
+  const demoBanner = (
+    <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
+      Vista interna de demo. En productivo este módulo se elimina y los canales se
+      configuran desde el menú del avatar, en Notificaciones (/profile/notifications).
+    </Alert>
+  );
+
   if (user.onboardingStatus !== 'approved') {
     return (
       <Stack spacing={3}>
         {header}
+        {demoBanner}
         <Card>
           <CardContent sx={{ paddingY: 6 }}>
             <Stack spacing={1.5} alignItems="center" sx={{ textAlign: 'center' }}>
@@ -48,6 +60,7 @@ export default function DevelopersPage() {
   return (
     <Stack spacing={3}>
       {header}
+      {demoBanner}
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ minHeight: 'auto' }}>
         <Tab label="API Keys" />
         <Tab label="Canales de notificación" />

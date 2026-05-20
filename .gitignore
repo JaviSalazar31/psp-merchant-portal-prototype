@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # TypeScript incremental build cache
 tsconfig.app.tsbuildinfo
+
+# Claude Code local config
+.claude/

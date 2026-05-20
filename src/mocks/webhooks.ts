@@ -1,12 +1,5 @@
-export type WebhookEventKey =
-  | 'transaction.created'
-  | 'transaction.authorized'
-  | 'transaction.failed'
-  | 'transaction.refunded'
-  | 'settlement.processed'
-  | 'dispute.opened'
-  | 'dispute.closed';
-
+export type WebhookEventKey = 'approved' | 'declined' | 'error' | 'expired' | 'notification_error';
+export type WebhookChannelType = 'email' | 'callback';
 export type WebhookDeliveryStatus = 'success' | 'failed' | 'retrying';
 
 export interface MockWebhookDelivery {
@@ -22,11 +15,21 @@ export interface MockWebhookDelivery {
   nextRetry?: Date | null;
 }
 
+/**
+ * Canal de notificación del comercio. Internamente seguimos llamándolo "webhook" en el
+ * código; en la interfaz el usuario ve "canal de notificación". Un canal puede ser de
+ * tipo email (alerta al correo) o callback (POST firmado a una URL del comercio).
+ */
 export interface MockWebhook {
   id: string;
-  url: string;
+  type: WebhookChannelType;
+  /** Destino cuando el canal es de tipo callback. */
+  url?: string;
+  /** Destino cuando el canal es de tipo email. */
+  email?: string;
   description: string;
-  signingSecret: string;
+  /** Sólo los canales callback tienen signing secret. */
+  signingSecret?: string;
   apiVersion: string;
   status: 'Activo' | 'Pausado';
   events: WebhookEventKey[];
@@ -36,24 +39,34 @@ export interface MockWebhook {
 }
 
 export const ALL_WEBHOOK_EVENTS: WebhookEventKey[] = [
-  'transaction.created',
-  'transaction.authorized',
-  'transaction.failed',
-  'transaction.refunded',
-  'settlement.processed',
-  'dispute.opened',
-  'dispute.closed',
+  'approved',
+  'declined',
+  'error',
+  'expired',
+  'notification_error',
 ];
 
+/** Los nombres de evento se muestran siempre en inglés por consistencia de marca. */
 export const WEBHOOK_EVENT_LABELS: Record<WebhookEventKey, string> = {
-  'transaction.created': 'Transacción creada',
-  'transaction.authorized': 'Transacción autorizada',
-  'transaction.failed': 'Transacción fallida',
-  'transaction.refunded': 'Transacción reembolsada',
-  'settlement.processed': 'Settlement procesado',
-  'dispute.opened': 'Disputa abierta',
-  'dispute.closed': 'Disputa cerrada',
+  approved: 'Approved',
+  declined: 'Declined',
+  error: 'Error',
+  expired: 'Expired',
+  notification_error: 'Notification Error',
 };
+
+/** Política de reintentos — se muestra en la sección "Detalles técnicos". */
+export const WEBHOOK_RETRY_POLICY =
+  '3 reintentos con backoff exponencial: el primero al minuto, el segundo a los 5 minutos y el tercero a los 30 minutos.';
+
+/** Ejemplo de payload — se muestra en la sección "Detalles técnicos". */
+export const WEBHOOK_PAYLOAD_EXAMPLE = `{
+  "event": "approved",
+  "transaction_id": "20260515-1200-pi00482",
+  "amount": 199.95,
+  "currency": "MXN",
+  "timestamp": "2026-05-15T12:00:00Z"
+}`;
 
 const today = new Date('2026-05-15T12:00:00').getTime();
 const mins = (n: number) => n * 60 * 1000;
@@ -63,191 +76,95 @@ const days = (n: number) => n * 24 * 60 * 60 * 1000;
 export const MOCK_WEBHOOKS: MockWebhook[] = [
   {
     id: 'wh_1',
+    type: 'callback',
     url: 'https://tacospancho.mx/api/webhooks/psp',
     description: 'Endpoint principal de producción del backend de Tacos Pancho.',
     signingSecret: 'whsec_8KqLm2pVnQrYjW3tBcN4FgD7HsZpRvKwMnUiTjLp9XqYzAbCdEf',
     apiVersion: '2026-04-22',
     status: 'Activo',
-    events: ['transaction.created', 'transaction.authorized', 'transaction.failed'],
+    events: ['approved', 'declined', 'error'],
     createdAt: new Date(today - days(35)),
     deliveryStats24h: { total: 28, successful: 27, failed: 1 },
     deliveries: [
       {
         id: 'd_1_1',
         timestamp: new Date(today - mins(5)),
-        event: 'transaction.authorized',
+        event: 'approved',
         statusCode: 200,
         status: 'success',
         attempts: 1,
-        maxAttempts: 8,
+        maxAttempts: 3,
         responseBodyPreview: '{"received":true}',
         latencyMs: 184,
       },
       {
         id: 'd_1_2',
         timestamp: new Date(today - mins(12)),
-        event: 'transaction.created',
+        event: 'declined',
         statusCode: 200,
         status: 'success',
         attempts: 1,
-        maxAttempts: 8,
+        maxAttempts: 3,
         responseBodyPreview: '{"received":true}',
         latencyMs: 142,
       },
       {
         id: 'd_1_3',
         timestamp: new Date(today - mins(35)),
-        event: 'transaction.failed',
+        event: 'error',
         statusCode: 500,
         status: 'retrying',
-        attempts: 3,
-        maxAttempts: 8,
+        attempts: 2,
+        maxAttempts: 3,
         responseBodyPreview: '{"error":"Internal server error"}',
         latencyMs: 5421,
         nextRetry: new Date(today + mins(25)),
       },
       {
         id: 'd_1_4',
-        timestamp: new Date(today - hours(1) - mins(10)),
-        event: 'transaction.authorized',
+        timestamp: new Date(today - hours(2)),
+        event: 'approved',
         statusCode: 200,
         status: 'success',
         attempts: 1,
-        maxAttempts: 8,
+        maxAttempts: 3,
         responseBodyPreview: '{"received":true}',
         latencyMs: 167,
-      },
-      {
-        id: 'd_1_5',
-        timestamp: new Date(today - hours(2) - mins(15)),
-        event: 'transaction.authorized',
-        statusCode: 200,
-        status: 'success',
-        attempts: 1,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 198,
-      },
-      {
-        id: 'd_1_6',
-        timestamp: new Date(today - hours(4)),
-        event: 'transaction.created',
-        statusCode: 200,
-        status: 'success',
-        attempts: 1,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 211,
-      },
-      {
-        id: 'd_1_7',
-        timestamp: new Date(today - hours(6) - mins(30)),
-        event: 'transaction.authorized',
-        statusCode: 200,
-        status: 'success',
-        attempts: 1,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 156,
       },
     ],
   },
   {
     id: 'wh_2',
-    url: 'https://staging.tacospancho.mx/webhooks',
-    description: 'Endpoint de staging — tests internos del equipo IT.',
-    signingSecret: 'whsec_3MnPqLrStUvWxYzAbCdEfGhJkLm2pVnQrYjW3tBcN4FgD7Hs',
+    type: 'email',
+    email: 'it-alerts@tacospancho.mx',
+    description: 'Alertas operativas al equipo de IT por correo.',
     apiVersion: '2026-04-22',
     status: 'Activo',
-    events: [
-      'transaction.created',
-      'transaction.authorized',
-      'transaction.failed',
-      'transaction.refunded',
-      'settlement.processed',
-    ],
+    events: ['approved', 'declined', 'error', 'expired', 'notification_error'],
     createdAt: new Date(today - days(18)),
-    deliveryStats24h: { total: 12, successful: 9, failed: 3 },
+    deliveryStats24h: { total: 12, successful: 12, failed: 0 },
     deliveries: [
       {
         id: 'd_2_1',
         timestamp: new Date(today - hours(1)),
-        event: 'transaction.failed',
-        statusCode: 500,
-        status: 'failed',
-        attempts: 8,
-        maxAttempts: 8,
-        responseBodyPreview: '{"error":"timeout connecting to upstream"}',
-        latencyMs: 30000,
-        nextRetry: null,
+        event: 'error',
+        statusCode: 200,
+        status: 'success',
+        attempts: 1,
+        maxAttempts: 3,
+        responseBodyPreview: 'Email entregado',
+        latencyMs: 320,
       },
       {
         id: 'd_2_2',
-        timestamp: new Date(today - hours(3) - mins(20)),
-        event: 'transaction.failed',
-        statusCode: 408,
-        status: 'failed',
-        attempts: 8,
-        maxAttempts: 8,
-        responseBodyPreview: '{"error":"request timeout"}',
-        latencyMs: 30000,
-        nextRetry: null,
-      },
-      {
-        id: 'd_2_3',
         timestamp: new Date(today - hours(5)),
-        event: 'transaction.authorized',
-        statusCode: 200,
-        status: 'success',
-        attempts: 2,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 1240,
-      },
-      {
-        id: 'd_2_4',
-        timestamp: new Date(today - hours(7)),
-        event: 'settlement.processed',
+        event: 'approved',
         statusCode: 200,
         status: 'success',
         attempts: 1,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 232,
-      },
-      {
-        id: 'd_2_5',
-        timestamp: new Date(today - hours(9) - mins(15)),
-        event: 'transaction.created',
-        statusCode: 200,
-        status: 'success',
-        attempts: 1,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 187,
-      },
-      {
-        id: 'd_2_6',
-        timestamp: new Date(today - hours(11)),
-        event: 'transaction.failed',
-        statusCode: 502,
-        status: 'failed',
-        attempts: 8,
-        maxAttempts: 8,
-        responseBodyPreview: '{"error":"bad gateway"}',
-        latencyMs: 412,
-        nextRetry: null,
-      },
-      {
-        id: 'd_2_7',
-        timestamp: new Date(today - hours(14)),
-        event: 'transaction.refunded',
-        statusCode: 200,
-        status: 'success',
-        attempts: 1,
-        maxAttempts: 8,
-        responseBodyPreview: '{"received":true}',
-        latencyMs: 198,
+        maxAttempts: 3,
+        responseBodyPreview: 'Email entregado',
+        latencyMs: 287,
       },
     ],
   },

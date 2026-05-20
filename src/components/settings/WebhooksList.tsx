@@ -2,27 +2,31 @@ import { useState } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
-  Divider,
   IconButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Tooltip,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
 import ContextBanner from '@/components/common/ContextBanner';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import CreateWebhookModal from './CreateWebhookModal';
@@ -33,18 +37,24 @@ import { toast } from '@/stores/toastStore';
 import { colors } from '@/theme/tokens';
 import type { MockWebhook } from '@/mocks/webhooks';
 
-function successRate(wh: MockWebhook): number {
-  const total = wh.deliveryStats24h.total;
-  if (total === 0) return 100;
-  return Math.round((wh.deliveryStats24h.successful / total) * 100);
-}
-
-function lastDelivery(wh: MockWebhook): MockWebhook['deliveries'][number] | null {
+function lastActivity(wh: MockWebhook): Date | null {
   if (wh.deliveries.length === 0) return null;
-  return wh.deliveries.reduce((latest, d) =>
-    d.timestamp.getTime() > latest.timestamp.getTime() ? d : latest,
+  return wh.deliveries.reduce(
+    (latest, d) => (d.timestamp.getTime() > latest.getTime() ? d.timestamp : latest),
+    wh.deliveries[0].timestamp,
   );
 }
+
+function channelTarget(wh: MockWebhook): string {
+  return (wh.type === 'email' ? wh.email : wh.url) ?? '—';
+}
+
+const HEAD_CELL = {
+  fontSize: 11,
+  letterSpacing: 0.5,
+  color: colors.textSecondary,
+  fontWeight: 700,
+};
 
 export function WebhooksList() {
   const webhooks = useWebhooksStore(s => s.webhooks);
@@ -63,7 +73,7 @@ export function WebhooksList() {
     setMenu(null);
     const newStatus = wh.status === 'Activo' ? 'Pausado' : 'Activo';
     await updateWebhook(wh.id, { status: newStatus });
-    toast.success(`Webhook ${newStatus === 'Activo' ? 'reanudado' : 'pausado'}.`);
+    toast.success(`Canal ${newStatus === 'Activo' ? 'reanudado' : 'pausado'}.`);
   };
 
   const handleConfirmDelete = async () => {
@@ -71,7 +81,7 @@ export function WebhooksList() {
     const target = confirmDelete;
     setConfirmDelete(null);
     await deleteWebhook(target.id);
-    toast.success('Webhook eliminado.');
+    toast.success('Canal de notificación eliminado.');
   };
 
   return (
@@ -83,215 +93,135 @@ export function WebhooksList() {
           startIcon={<AddIcon />}
           onClick={() => setCreateState({ open: true, webhook: null })}
         >
-          Agregar endpoint
+          Crear canal de notificación
         </Button>
       </Stack>
 
       <ContextBanner variant="info">
-        Tus endpoints reciben un POST firmado con HMAC SHA256 usando el{' '}
-        <strong>signing secret</strong> de cada webhook. Verificá la firma del header{' '}
-        <code>PSP-Signature</code> antes de procesar el evento.
+        Configurá canales para enterarte de los eventos de tu cuenta. Un canal puede avisarte
+        por <strong>email</strong> o por <strong>callback</strong> — un POST firmado a una URL de
+        tu servidor.
       </ContextBanner>
 
-      <Stack spacing={2}>
-        {webhooks.map(wh => {
-          const last = lastDelivery(wh);
-          const rate = successRate(wh);
-          const hasIssues = wh.deliveryStats24h.failed > 0;
-
-          return (
-            <Card key={wh.id}>
-              <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-                <Stack spacing={1.5}>
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={1.5}
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    justifyContent="space-between"
-                  >
-                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+      <TableContainer
+        sx={{
+          border: `1px solid ${colors.borderDefault}`,
+          borderRadius: 2,
+          backgroundColor: colors.bgCard,
+          overflow: 'auto',
+        }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: colors.bgSubtle }}>
+              <TableCell sx={HEAD_CELL}>CANAL</TableCell>
+              <TableCell sx={HEAD_CELL}>TIPO</TableCell>
+              <TableCell sx={HEAD_CELL}>EVENTOS</TableCell>
+              <TableCell sx={HEAD_CELL}>ESTADO</TableCell>
+              <TableCell sx={HEAD_CELL}>ÚLTIMA ACTIVIDAD</TableCell>
+              <TableCell sx={HEAD_CELL} align="right">
+                ACCIONES
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {webhooks.map(wh => {
+              const last = lastActivity(wh);
+              const isEmail = wh.type === 'email';
+              return (
+                <TableRow key={wh.id} hover>
+                  <TableCell>
+                    <Stack direction="row" spacing={1.25} alignItems="center">
                       <Box
                         sx={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: '50%',
-                          backgroundColor:
-                            wh.status === 'Activo' ? '#10B981' : colors.borderStrong,
+                          width: 32,
+                          height: 32,
+                          borderRadius: 1,
+                          backgroundColor: colors.bgSubtle,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                           flexShrink: 0,
                         }}
-                      />
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              fontWeight: 600,
-                              wordBreak: 'break-all',
-                              fontFamily: 'monospace',
-                              fontSize: 14,
-                            }}
-                          >
-                            {wh.url}
-                          </Typography>
-                          <Chip
-                            label={wh.status}
-                            size="small"
-                            sx={{
-                              backgroundColor:
-                                wh.status === 'Activo'
-                                  ? colors.bannerSuccess.bg
-                                  : colors.bannerWarning.bg,
-                              color:
-                                wh.status === 'Activo'
-                                  ? colors.bannerSuccess.fg
-                                  : colors.bannerWarning.fg,
-                              fontWeight: 600,
-                            }}
-                          />
-                        </Stack>
+                      >
+                        {isEmail ? (
+                          <EmailOutlinedIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                        ) : (
+                          <WebhookOutlinedIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                        )}
+                      </Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, fontFamily: isEmail ? undefined : 'monospace', wordBreak: 'break-all' }}
+                        >
+                          {channelTarget(wh)}
+                        </Typography>
                         {wh.description && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                          <Typography variant="caption" color="text.secondary">
                             {wh.description}
                           </Typography>
                         )}
                       </Box>
                     </Stack>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        endIcon={<OpenInNewIcon fontSize="small" />}
-                        onClick={() => setDetailWebhook(wh)}
-                      >
-                        Ver detalles
-                      </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={isEmail ? 'Email' : 'Callback'}
+                      size="small"
+                      sx={{
+                        backgroundColor: isEmail ? '#DBEAFE' : '#E0E7FF',
+                        color: isEmail ? '#1E40AF' : '#3730A3',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ fontSize: 13, color: colors.textSecondary }}>
+                    {wh.events.length} {wh.events.length === 1 ? 'evento' : 'eventos'}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={wh.status}
+                      size="small"
+                      sx={{
+                        backgroundColor:
+                          wh.status === 'Activo' ? colors.bannerSuccess.bg : colors.bannerWarning.bg,
+                        color:
+                          wh.status === 'Activo' ? colors.bannerSuccess.fg : colors.bannerWarning.fg,
+                        fontWeight: 600,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ fontSize: 13, color: colors.textSecondary }}>
+                    {last ? <TimeAgo date={last} variant="body2" /> : '—'}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Acciones">
                       <IconButton
                         size="small"
                         onClick={e => setMenu({ anchor: e.currentTarget as HTMLElement, webhook: wh })}
                       >
                         <MoreVertIcon fontSize="small" />
                       </IconButton>
-                    </Stack>
-                  </Stack>
-
-                  <Divider />
-
-                  <Stack
-                    direction="row"
-                    spacing={{ xs: 2, md: 4 }}
-                    sx={{ flexWrap: 'wrap', rowGap: 1 }}
-                  >
-                    <Stack spacing={0.25}>
-                      <Typography variant="caption" color="text.secondary">
-                        Eventos suscritos
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {wh.events.length}
-                      </Typography>
-                    </Stack>
-                    <Stack spacing={0.25}>
-                      <Typography variant="caption" color="text.secondary">
-                        Entregas últimas 24h
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {wh.deliveryStats24h.total}
-                      </Typography>
-                    </Stack>
-                    <Stack spacing={0.25}>
-                      <Typography variant="caption" color="text.secondary">
-                        Tasa de éxito
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 600,
-                          color: rate >= 95
-                            ? colors.bannerSuccess.fg
-                            : rate >= 80
-                              ? colors.bannerWarning.fg
-                              : colors.bannerError.fg,
-                        }}
-                      >
-                        {rate}%
-                      </Typography>
-                    </Stack>
-                    <Stack spacing={0.25}>
-                      <Typography variant="caption" color="text.secondary">
-                        Última entrega
-                      </Typography>
-                      {last ? (
-                        <Stack direction="row" spacing={1} alignItems="baseline">
-                          <TimeAgo
-                            date={last.timestamp}
-                            variant="body2"
-                            sx={{ fontWeight: 600 }}
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            · {last.statusCode}{' '}
-                            {last.status === 'success'
-                              ? 'OK'
-                              : last.status === 'retrying'
-                                ? 'reintentando'
-                                : 'fallida'}
-                          </Typography>
-                        </Stack>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          Sin entregas
-                        </Typography>
-                      )}
-                    </Stack>
-                  </Stack>
-
-                  {hasIssues && (
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      sx={{
-                        backgroundColor: colors.bannerWarning.bg,
-                        color: colors.bannerWarning.fg,
-                        borderRadius: 1.5,
-                        paddingX: 1.5,
-                        paddingY: 0.75,
-                      }}
-                    >
-                      <WarningAmberIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                        {wh.deliveryStats24h.failed}{' '}
-                        {wh.deliveryStats24h.failed === 1 ? 'fallo' : 'fallos'} en las últimas
-                        24h. Revisá el historial de entregas.
-                      </Typography>
-                    </Stack>
-                  )}
-                </Stack>
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {webhooks.length === 0 && (
-          <Card>
-            <CardContent sx={{ paddingY: 6 }}>
-              <Stack spacing={1.5} alignItems="center" sx={{ textAlign: 'center' }}>
-                <Typography variant="h4">Aún no agregaste endpoints</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480 }}>
-                  Configurá un endpoint HTTPS para recibir eventos en tiempo real cuando
-                  ocurran transacciones, settlements o disputas.
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setCreateState({ open: true, webhook: null })}
-                  sx={{ mt: 1 }}
-                >
-                  Agregar endpoint
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-        )}
-      </Stack>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {webhooks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Box sx={{ paddingY: 4, textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Aún no configuraste canales de notificación. Creá uno para empezar.
+                    </Typography>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Menu
         anchorEl={menu?.anchor}
@@ -303,10 +233,20 @@ export function WebhooksList() {
       >
         {menu && [
           <MenuItem
+            key="detail"
+            onClick={() => {
+              setDetailWebhook(menu.webhook);
+              setMenu(null);
+            }}
+          >
+            <ListItemIcon><VisibilityOutlinedIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary="Ver detalles" primaryTypographyProps={{ fontSize: 14 }} />
+          </MenuItem>,
+          <MenuItem
             key="edit"
             onClick={() => {
-              setMenu(null);
               setCreateState({ open: true, webhook: menu.webhook });
+              setMenu(null);
             }}
           >
             <ListItemIcon><EditOutlinedIcon fontSize="small" /></ListItemIcon>
@@ -325,23 +265,11 @@ export function WebhooksList() {
               primaryTypographyProps={{ fontSize: 14 }}
             />
           </MenuItem>,
-          <Tooltip
-            key="rotate-secret"
-            title="Disponible en la próxima versión."
-            placement="left"
-          >
-            <span>
-              <MenuItem disabled>
-                <ListItemIcon><EditOutlinedIcon fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Rotar signing secret" primaryTypographyProps={{ fontSize: 14 }} />
-              </MenuItem>
-            </span>
-          </Tooltip>,
           <MenuItem
             key="delete"
             onClick={() => {
-              setMenu(null);
               setConfirmDelete(menu.webhook);
+              setMenu(null);
             }}
             sx={{ color: colors.bannerError.fg }}
           >
@@ -367,12 +295,12 @@ export function WebhooksList() {
 
       <ConfirmDialog
         open={!!confirmDelete}
-        title="¿Eliminar este webhook?"
+        title="¿Eliminar este canal?"
         description={
           confirmDelete ? (
             <span>
-              Vas a eliminar el endpoint <strong>{confirmDelete.url}</strong>. Dejaremos de
-              enviar eventos a esta URL. Esta acción no se puede deshacer.
+              Vas a eliminar el canal <strong>{channelTarget(confirmDelete)}</strong>. Dejaremos
+              de enviar eventos a este destino. Esta acción no se puede deshacer.
             </span>
           ) : (
             ''

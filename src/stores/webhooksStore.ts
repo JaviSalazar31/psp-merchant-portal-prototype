@@ -3,11 +3,14 @@ import {
   MOCK_WEBHOOKS,
   type MockWebhook,
   type MockWebhookDelivery,
+  type WebhookChannelType,
   type WebhookEventKey,
 } from '@/mocks/webhooks';
 
 export interface CreateWebhookPayload {
-  url: string;
+  type: WebhookChannelType;
+  url?: string;
+  email?: string;
   description: string;
   events: WebhookEventKey[];
 }
@@ -16,7 +19,10 @@ interface WebhooksState {
   webhooks: MockWebhook[];
   saving: boolean;
   createWebhook: (payload: CreateWebhookPayload) => Promise<MockWebhook>;
-  updateWebhook: (id: string, patch: Partial<Pick<MockWebhook, 'url' | 'description' | 'events' | 'status'>>) => Promise<void>;
+  updateWebhook: (
+    id: string,
+    patch: Partial<Pick<MockWebhook, 'url' | 'email' | 'description' | 'events' | 'status'>>,
+  ) => Promise<void>;
   deleteWebhook: (id: string) => Promise<void>;
   retryDelivery: (webhookId: string, deliveryId: string) => Promise<MockWebhookDelivery | null>;
   sendTestEvent: (webhookId: string, event: WebhookEventKey) => Promise<MockWebhookDelivery>;
@@ -41,7 +47,6 @@ function randomSecret(n: number) {
 }
 
 function buildTestDelivery(event: WebhookEventKey): MockWebhookDelivery {
-  // Simulamos respuesta exitosa para el test event.
   return {
     id: generateId('d'),
     timestamp: new Date(),
@@ -49,7 +54,7 @@ function buildTestDelivery(event: WebhookEventKey): MockWebhookDelivery {
     statusCode: 200,
     status: 'success',
     attempts: 1,
-    maxAttempts: 8,
+    maxAttempts: 3,
     responseBodyPreview: '{"received":true}',
     latencyMs: 120 + Math.floor(Math.random() * 180),
   };
@@ -59,14 +64,16 @@ export const useWebhooksStore = create<WebhooksState>((set, get) => ({
   webhooks: MOCK_WEBHOOKS,
   saving: false,
 
-  createWebhook: async ({ url, description, events }) => {
+  createWebhook: async ({ type, url, email, description, events }) => {
     set({ saving: true });
     await fakeDelay();
     const newWh: MockWebhook = {
       id: generateId('wh'),
-      url,
+      type,
+      url: type === 'callback' ? url : undefined,
+      email: type === 'email' ? email : undefined,
       description,
-      signingSecret: `whsec_${randomSecret(48)}`,
+      signingSecret: type === 'callback' ? `whsec_${randomSecret(48)}` : undefined,
       apiVersion: '2026-04-22',
       status: 'Activo',
       events,
@@ -102,7 +109,6 @@ export const useWebhooksStore = create<WebhooksState>((set, get) => ({
       set({ saving: false });
       return null;
     }
-    // En el reintento manual simulamos éxito y resetear retry chain.
     const retried: MockWebhookDelivery = {
       ...delivery,
       id: generateId('d'),

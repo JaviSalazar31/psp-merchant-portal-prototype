@@ -28,6 +28,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
+import WebhookTechnicalDetails from './WebhookTechnicalDetails';
 import { useWebhooksStore } from '@/stores/webhooksStore';
 import { toast } from '@/stores/toastStore';
 import {
@@ -65,19 +66,29 @@ function statusColor(delivery: MockWebhookDelivery): { bg: string; fg: string } 
   return colors.bannerError;
 }
 
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
+      <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary, flexShrink: 0 }}>
+        {label}
+      </Typography>
+      <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
+    </Stack>
+  );
+}
+
 export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
   const retryDelivery = useWebhooksStore(s => s.retryDelivery);
   const sendTestEvent = useWebhooksStore(s => s.sendTestEvent);
   const saving = useWebhooksStore(s => s.saving);
 
-  // Suscripción reactiva al webhook actualizado por id (post-update store).
   const currentWebhook = useWebhooksStore(
     s => (webhook ? s.webhooks.find(w => w.id === webhook.id) : null) ?? webhook,
   );
 
   const [tab, setTab] = useState(0);
   const [secretVisible, setSecretVisible] = useState(false);
-  const [testEvent, setTestEvent] = useState<WebhookEventKey>('transaction.authorized');
+  const [testEvent, setTestEvent] = useState<WebhookEventKey>('approved');
   const [lastTestResult, setLastTestResult] = useState<MockWebhookDelivery | null>(null);
 
   useEffect(() => {
@@ -85,15 +96,20 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
       setTab(0);
       setSecretVisible(false);
       setLastTestResult(null);
-      setTestEvent('transaction.authorized');
+      setTestEvent('approved');
     }
   }, [open, webhook?.id]);
 
   if (!currentWebhook) return null;
 
+  const isEmail = currentWebhook.type === 'email';
+  const target = (isEmail ? currentWebhook.email : currentWebhook.url) ?? '—';
+  const secret = currentWebhook.signingSecret;
+
   const handleCopySecret = async () => {
+    if (!secret) return;
     try {
-      await navigator.clipboard.writeText(currentWebhook.signingSecret);
+      await navigator.clipboard.writeText(secret);
       toast.success('Signing secret copiado al portapapeles.');
     } catch {
       toast.error('No se pudo copiar.');
@@ -115,7 +131,9 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
     toast.success(`Evento de prueba enviado. Status ${result.statusCode}.`);
   };
 
-  const maskedSecret = `${currentWebhook.signingSecret.slice(0, 11)}••••••••••••${currentWebhook.signingSecret.slice(-6)}`;
+  const maskedSecret = secret
+    ? `${secret.slice(0, 11)}••••••••••••${secret.slice(-6)}`
+    : '';
 
   return (
     <Dialog
@@ -128,10 +146,10 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
       <DialogTitle sx={{ pr: 6, pb: 0 }}>
         <Stack spacing={0.5}>
           <Typography variant="caption" color="text.secondary">
-            Webhook
+            Canal de notificación
           </Typography>
           <Typography variant="h4" sx={{ wordBreak: 'break-all' }}>
-            {currentWebhook.url}
+            {target}
           </Typography>
         </Stack>
         <IconButton aria-label="Cerrar" onClick={onClose} sx={{ position: 'absolute', right: 12, top: 12 }}>
@@ -148,104 +166,93 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
       </Box>
       <DialogContent>
         {tab === 0 && (
-          <Stack spacing={1.25} divider={<Divider flexItem />} sx={{ pt: 1 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
-              <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary }}>
-                URL del endpoint
-              </Typography>
-              <Typography variant="body2" sx={{ flex: 1, wordBreak: 'break-all' }}>
-                {currentWebhook.url}
-              </Typography>
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
-              <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary }}>
-                Descripción
-              </Typography>
-              <Typography variant="body2" sx={{ flex: 1 }}>
-                {currentWebhook.description || '—'}
-              </Typography>
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
-              <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary }}>
-                Signing secret
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
-                <Box
-                  component="code"
+          <Stack spacing={1.5} sx={{ pt: 1 }}>
+            <Stack divider={<Divider flexItem />}>
+              <DetailRow label="Tipo de canal">
+                <Chip
+                  label={isEmail ? 'Email' : 'Callback'}
+                  size="small"
                   sx={{
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    color: colors.textPrimary,
-                    backgroundColor: colors.bgSubtle,
-                    paddingX: 1,
-                    paddingY: 0.5,
-                    borderRadius: 1,
-                    flex: 1,
-                    wordBreak: 'break-all',
+                    backgroundColor: isEmail ? '#DBEAFE' : '#E0E7FF',
+                    color: isEmail ? '#1E40AF' : '#3730A3',
+                    fontWeight: 600,
                   }}
-                >
-                  {secretVisible ? currentWebhook.signingSecret : maskedSecret}
-                </Box>
-                <Tooltip title={secretVisible ? 'Ocultar' : 'Mostrar'}>
-                  <IconButton size="small" onClick={() => setSecretVisible(v => !v)}>
-                    {secretVisible ? (
-                      <VisibilityOffOutlinedIcon fontSize="small" />
-                    ) : (
-                      <VisibilityOutlinedIcon fontSize="small" />
-                    )}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Copiar">
-                  <IconButton size="small" onClick={handleCopySecret}>
-                    <ContentCopyIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
+                />
+              </DetailRow>
+              <DetailRow label={isEmail ? 'Correo electrónico' : 'URL del servidor'}>
+                <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                  {target}
+                </Typography>
+              </DetailRow>
+              <DetailRow label="Descripción">
+                <Typography variant="body2">{currentWebhook.description || '—'}</Typography>
+              </DetailRow>
+              {!isEmail && secret && (
+                <DetailRow label="Signing secret">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box
+                      component="code"
+                      sx={{
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: colors.textPrimary,
+                        backgroundColor: colors.bgSubtle,
+                        paddingX: 1,
+                        paddingY: 0.5,
+                        borderRadius: 1,
+                        flex: 1,
+                        wordBreak: 'break-all',
+                      }}
+                    >
+                      {secretVisible ? secret : maskedSecret}
+                    </Box>
+                    <Tooltip title={secretVisible ? 'Ocultar' : 'Mostrar'}>
+                      <IconButton size="small" onClick={() => setSecretVisible(v => !v)}>
+                        {secretVisible ? (
+                          <VisibilityOffOutlinedIcon fontSize="small" />
+                        ) : (
+                          <VisibilityOutlinedIcon fontSize="small" />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Copiar">
+                      <IconButton size="small" onClick={handleCopySecret}>
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </DetailRow>
+              )}
+              <DetailRow label="Estado">
+                <Chip
+                  label={currentWebhook.status}
+                  size="small"
+                  sx={{
+                    backgroundColor:
+                      currentWebhook.status === 'Activo'
+                        ? colors.bannerSuccess.bg
+                        : colors.bannerWarning.bg,
+                    color:
+                      currentWebhook.status === 'Activo'
+                        ? colors.bannerSuccess.fg
+                        : colors.bannerWarning.fg,
+                    fontWeight: 600,
+                  }}
+                />
+              </DetailRow>
+              <DetailRow label="Creado">
+                <Typography variant="body2">{fmtDate(currentWebhook.createdAt)}</Typography>
+              </DetailRow>
             </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
-              <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary }}>
-                Versión de API
-              </Typography>
-              <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace' }}>
-                {currentWebhook.apiVersion}
-              </Typography>
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
-              <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary }}>
-                Estado
-              </Typography>
-              <Chip
-                label={currentWebhook.status}
-                size="small"
-                sx={{
-                  backgroundColor:
-                    currentWebhook.status === 'Activo'
-                      ? colors.bannerSuccess.bg
-                      : colors.bannerWarning.bg,
-                  color:
-                    currentWebhook.status === 'Activo'
-                      ? colors.bannerSuccess.fg
-                      : colors.bannerWarning.fg,
-                  fontWeight: 600,
-                }}
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ paddingY: 0.5 }}>
-              <Typography variant="caption" sx={{ width: 200, color: colors.textSecondary }}>
-                Creado
-              </Typography>
-              <Typography variant="body2" sx={{ flex: 1 }}>
-                {fmtDate(currentWebhook.createdAt)}
-              </Typography>
-            </Stack>
+            {!isEmail && <WebhookTechnicalDetails />}
           </Stack>
         )}
 
         {tab === 1 && (
           <Stack spacing={1} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Eventos a los que está suscrito este endpoint. Para modificarlos, editá el
-              webhook desde la lista.
+              Eventos a los que está suscrito este canal. Para modificarlos, editá el canal
+              desde la lista.
             </Typography>
             <Box
               sx={{
@@ -275,26 +282,16 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
                         flexShrink: 0,
                       }}
                     />
-                    <Stack spacing={0.25} sx={{ flex: 1 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 500,
-                          color: isSubscribed ? colors.textPrimary : colors.textMuted,
-                        }}
-                      >
-                        {WEBHOOK_EVENT_LABELS[event]}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontFamily: 'monospace',
-                          color: isSubscribed ? colors.textSecondary : colors.textMuted,
-                        }}
-                      >
-                        {event}
-                      </Typography>
-                    </Stack>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        flex: 1,
+                        fontWeight: 500,
+                        color: isSubscribed ? colors.textPrimary : colors.textMuted,
+                      }}
+                    >
+                      {WEBHOOK_EVENT_LABELS[event]}
+                    </Typography>
                     {isSubscribed && (
                       <Chip
                         label="Suscrito"
@@ -315,18 +312,15 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
 
         {tab === 2 && (
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Stack spacing={0.25}>
-                <Typography variant="caption" color="text.secondary">
-                  Últimas 24 horas
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {currentWebhook.deliveryStats24h.total} entregas ·{' '}
-                  {currentWebhook.deliveryStats24h.successful} exitosas ·{' '}
-                  {currentWebhook.deliveryStats24h.failed} fallidas
-                </Typography>
-              </Stack>
-            </Stack>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {currentWebhook.deliveryStats24h.total} entregas ·{' '}
+              {currentWebhook.deliveryStats24h.successful} exitosas ·{' '}
+              {currentWebhook.deliveryStats24h.failed} fallidas
+              <Typography component="span" variant="caption" color="text.secondary">
+                {' '}
+                (últimas 24 horas)
+              </Typography>
+            </Typography>
             <TableContainer
               sx={{
                 border: `1px solid ${colors.borderDefault}`,
@@ -366,34 +360,20 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
                         <TableCell sx={{ fontSize: 12, fontFamily: 'monospace' }}>
                           {fmtDateTime(delivery.timestamp)}
                         </TableCell>
-                        <TableCell sx={{ fontSize: 12, fontFamily: 'monospace' }}>
-                          {delivery.event}
+                        <TableCell sx={{ fontSize: 12 }}>
+                          {WEBHOOK_EVENT_LABELS[delivery.event]}
                         </TableCell>
                         <TableCell>
                           <Chip
                             label={`${delivery.statusCode} ${delivery.status === 'success' ? 'OK' : delivery.status === 'retrying' ? 'Reintentando' : 'Fallido'}`}
                             size="small"
-                            sx={{
-                              backgroundColor: color.bg,
-                              color: color.fg,
-                              fontWeight: 600,
-                            }}
+                            sx={{ backgroundColor: color.bg, color: color.fg, fontWeight: 600 }}
                           />
                         </TableCell>
                         <TableCell sx={{ fontSize: 12 }}>
                           {delivery.attempts}/{delivery.maxAttempts}
-                          {delivery.status === 'retrying' && delivery.nextRetry && (
-                            <Typography
-                              variant="caption"
-                              sx={{ display: 'block', color: colors.textMuted }}
-                            >
-                              próximo {fmtDateTime(delivery.nextRetry).slice(7)}
-                            </Typography>
-                          )}
                         </TableCell>
-                        <TableCell sx={{ fontSize: 12 }}>
-                          {delivery.latencyMs} ms
-                        </TableCell>
+                        <TableCell sx={{ fontSize: 12 }}>{delivery.latencyMs} ms</TableCell>
                         <TableCell align="right">
                           {isRetryable && (
                             <Tooltip title="Reintentar envío">
@@ -433,8 +413,8 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
         {tab === 3 && (
           <Stack spacing={2.5} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Enviá un evento de prueba para verificar que tu endpoint responde correctamente.
-              No se generan datos reales: el payload es ficticio y no afecta tus reportes.
+              Enviá un evento de prueba para verificar que este canal recibe correctamente. No
+              se generan datos reales: el payload es ficticio y no afecta tus reportes.
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
@@ -447,7 +427,7 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
               >
                 {ALL_WEBHOOK_EVENTS.map(event => (
                   <MenuItem key={event} value={event}>
-                    {WEBHOOK_EVENT_LABELS[event]} ({event})
+                    {WEBHOOK_EVENT_LABELS[event]}
                   </MenuItem>
                 ))}
               </TextField>
@@ -488,21 +468,6 @@ export function WebhookDeliveryHistory({ open, webhook, onClose }: Props) {
                   <Typography variant="caption" color="text.secondary">
                     Latencia: {lastTestResult.latencyMs} ms · {fmtDateTime(lastTestResult.timestamp)}
                   </Typography>
-                  <Box
-                    component="pre"
-                    sx={{
-                      margin: 0,
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                      backgroundColor: colors.bgCard,
-                      padding: 1.5,
-                      borderRadius: 1,
-                      border: `1px solid ${colors.borderDefault}`,
-                      overflowX: 'auto',
-                    }}
-                  >
-                    {lastTestResult.responseBodyPreview}
-                  </Box>
                 </Stack>
               </Box>
             )}

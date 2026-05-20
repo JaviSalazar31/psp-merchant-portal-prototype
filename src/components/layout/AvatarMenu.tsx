@@ -13,14 +13,12 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
+import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
-import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
-import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { colors } from '@/theme/tokens';
@@ -33,8 +31,7 @@ const ITEMS = [
   { label: 'Mi perfil', to: '/profile', icon: <PersonOutlineIcon fontSize="small" /> },
   { label: 'Cuenta', to: '/account', icon: <ManageAccountsOutlinedIcon fontSize="small" /> },
   { label: 'Centro de Seguridad', to: '/security', icon: <ShieldOutlinedIcon fontSize="small" /> },
-  { label: 'API Keys', to: '/api-keys', icon: <KeyOutlinedIcon fontSize="small" /> },
-  { label: 'Webhooks', to: '/webhooks', icon: <WebhookOutlinedIcon fontSize="small" /> },
+  { label: 'Desarrolladores', to: '/developers', icon: <CodeOutlinedIcon fontSize="small" /> },
 ];
 
 export function AvatarMenu() {
@@ -93,7 +90,6 @@ export function AvatarMenu() {
             {user.firstName} {user.lastName}
           </Typography>
           <Typography variant="caption" sx={{ color: colors.textSecondary, lineHeight: 1.2 }}>
-            <PaymentsOutlinedIcon sx={{ display: 'none' }} />
             {user.role}
           </Typography>
         </Box>

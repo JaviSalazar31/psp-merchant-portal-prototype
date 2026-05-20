@@ -102,18 +102,7 @@ export function ApiKeysList() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Stack spacing={0.5}>
-          <Typography variant="h1">API Keys</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gestioná las credenciales para acceder a la API de Paynau.
-          </Typography>
-        </Stack>
+      <Stack direction="row" justifyContent="flex-end">
         <Button
           variant="contained"
           color="primary"

@@ -76,18 +76,7 @@ export function WebhooksList() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Stack spacing={0.5}>
-          <Typography variant="h1">Webhooks</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Configurá endpoints para recibir notificaciones de eventos de tu cuenta.
-          </Typography>
-        </Stack>
+      <Stack direction="row" justifyContent="flex-end">
         <Button
           variant="contained"
           color="primary"

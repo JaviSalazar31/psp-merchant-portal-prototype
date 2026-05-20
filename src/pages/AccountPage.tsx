@@ -1,5 +1,5 @@
-import AccountSettings from '@/components/settings/AccountSettings';
+import UserAccountSettings from '@/components/settings/UserAccountSettings';
 
 export default function AccountPage() {
-  return <AccountSettings />;
+  return <UserAccountSettings />;
 }

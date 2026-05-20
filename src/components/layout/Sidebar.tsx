@@ -48,7 +48,7 @@ const ITEMS: SidebarItem[] = [
 ];
 
 const FOOTER_ITEMS: SidebarItem[] = [
-  { to: '/profile', label: 'Perfil', icon: <AccountCircleOutlinedIcon /> },
+  { to: '/profile/wizard', label: 'Perfil', icon: <AccountCircleOutlinedIcon /> },
 ];
 
 interface SidebarProps {

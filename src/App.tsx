@@ -21,9 +21,9 @@ import SettlementsPage from '@/pages/SettlementsPage';
 import UsersPage from '@/pages/UsersPage';
 import AccountPage from '@/pages/AccountPage';
 import SecurityCenterPage from '@/pages/SecurityCenterPage';
-import ApiKeysPage from '@/pages/ApiKeysPage';
-import WebhooksPage from '@/pages/WebhooksPage';
+import DevelopersPage from '@/pages/DevelopersPage';
 import ProfilePage from '@/pages/ProfilePage';
+import CompanyProfilePage from '@/pages/CompanyProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import DevPage from '@/pages/DevPage';
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
@@ -95,9 +95,9 @@ export default function App() {
             <Route path="/users" element={<UsersPage />} />
             <Route path="/account" element={<AccountPage />} />
             <Route path="/security" element={<SecurityCenterPage />} />
-            <Route path="/api-keys" element={<ApiKeysPage />} />
-            <Route path="/webhooks" element={<WebhooksPage />} />
+            <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/wizard" element={<CompanyProfilePage />} />
           </Route>
 
           {/* Ruta oculta para presentaciones / debug. Solo accesible tipeando /dev. */}

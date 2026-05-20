@@ -19,10 +19,8 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { COUNTRIES } from '@/constants/countries';
-import { CURRENCIES } from '@/constants/currencies';
-import { PAYMENT_METHODS } from '@/constants/paymentMethods';
 import { TRANSACTION_STATES, type TransactionStatusKey } from '@/constants/transactionStates';
+import { useMerchantScope } from '@/hooks/useMerchantScope';
 import type { TransactionFilters } from './filterTypes';
 import { EMPTY_FILTERS } from './filterTypes';
 import { colors } from '@/theme/tokens';
@@ -36,6 +34,7 @@ interface Props {
 
 export function AdvancedFiltersModal({ open, filters, onClose, onApply }: Props) {
   const [draft, setDraft] = useState<TransactionFilters>(filters);
+  const merchantScope = useMerchantScope();
 
   const set = <K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) =>
     setDraft(prev => ({ ...prev, [key]: value }));
@@ -129,7 +128,7 @@ export function AdvancedFiltersModal({ open, filters, onClose, onApply }: Props)
                   SelectProps={{ displayEmpty: true }}
                 >
                   <MenuItem value=""><em>Todas</em></MenuItem>
-                  {CURRENCIES.map(c => (
+                  {merchantScope.currencies.map(c => (
                     <MenuItem key={c.code} value={c.code}>{c.code} — {c.name}</MenuItem>
                   ))}
                 </TextField>
@@ -166,7 +165,7 @@ export function AdvancedFiltersModal({ open, filters, onClose, onApply }: Props)
                   Países
                 </Typography>
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
-                  {COUNTRIES.map(c => (
+                  {merchantScope.countries.map(c => (
                     <Chip
                       key={c.code}
                       label={`${c.flag} ${c.code}`}
@@ -184,7 +183,7 @@ export function AdvancedFiltersModal({ open, filters, onClose, onApply }: Props)
                   Métodos de pago
                 </Typography>
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
-                  {PAYMENT_METHODS.map(m => (
+                  {merchantScope.paymentMethods.map(m => (
                     <Chip
                       key={m.key}
                       label={m.label}

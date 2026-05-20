@@ -27,13 +27,6 @@ export function RolesList() {
 
   return (
     <Stack spacing={3}>
-      <Stack spacing={0.5}>
-        <Typography variant="h1">Roles</Typography>
-        <Typography variant="body1" color="text.secondary">
-          Estos son los roles disponibles en tu cuenta. Asignalos al crear o editar usuarios.
-        </Typography>
-      </Stack>
-
       <Grid container spacing={2}>
         {MOCK_ROLES.map(r => (
           <Grid item xs={12} md={4} key={r.key}>

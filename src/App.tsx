@@ -19,7 +19,6 @@ import HomePage from '@/pages/HomePage';
 import TransactionsPayInPage from '@/pages/TransactionsPayInPage';
 import SettlementsPage from '@/pages/SettlementsPage';
 import UsersPage from '@/pages/UsersPage';
-import RolesPage from '@/pages/RolesPage';
 import AccountPage from '@/pages/AccountPage';
 import SecurityCenterPage from '@/pages/SecurityCenterPage';
 import ApiKeysPage from '@/pages/ApiKeysPage';
@@ -94,7 +93,6 @@ export default function App() {
 
             <Route path="/settlements" element={<SettlementsPage />} />
             <Route path="/users" element={<UsersPage />} />
-            <Route path="/roles" element={<RolesPage />} />
             <Route path="/account" element={<AccountPage />} />
             <Route path="/security" element={<SecurityCenterPage />} />
             <Route path="/api-keys" element={<ApiKeysPage />} />

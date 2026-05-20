@@ -120,18 +120,7 @@ export function UsersList() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Stack spacing={0.5}>
-          <Typography variant="h1">Usuarios</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gestioná los usuarios que pueden acceder a tu cuenta de Paynau.
-          </Typography>
-        </Stack>
+      <Stack direction="row" justifyContent="flex-end">
         <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={openCreate}>
           Crear usuario
         </Button>

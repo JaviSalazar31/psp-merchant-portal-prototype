@@ -8,10 +8,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { COUNTRIES } from '@/constants/countries';
-import { CURRENCIES } from '@/constants/currencies';
-import { PAYMENT_METHODS } from '@/constants/paymentMethods';
 import { TRANSACTION_STATES, type TransactionStatusKey, PAYOUT_STATES } from '@/constants/transactionStates';
+import { useMerchantScope } from '@/hooks/useMerchantScope';
 import type { TransactionFilters } from './filterTypes';
 import { EMPTY_FILTERS } from './filterTypes';
 import { colors } from '@/theme/tokens';
@@ -24,6 +22,8 @@ interface Props {
 }
 
 export function TransactionFilterBar({ filters, onChange, scope }: Props) {
+  const merchantScope = useMerchantScope();
+
   const set = <K extends keyof TransactionFilters>(key: K, value: TransactionFilters[K]) =>
     onChange({ ...filters, [key]: value });
 
@@ -64,7 +64,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             <MenuItem value="">
               <em>Todos</em>
             </MenuItem>
-            {COUNTRIES.map(c => (
+            {merchantScope.countries.map(c => (
               <MenuItem key={c.code} value={c.code}>
                 {c.flag} {c.code}
               </MenuItem>
@@ -84,7 +84,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             <MenuItem value="">
               <em>Todas</em>
             </MenuItem>
-            {CURRENCIES.map(c => (
+            {merchantScope.currencies.map(c => (
               <MenuItem key={c.code} value={c.code}>
                 {c.code}
               </MenuItem>
@@ -104,7 +104,7 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             <MenuItem value="">
               <em>Todos</em>
             </MenuItem>
-            {PAYMENT_METHODS.map(m => (
+            {merchantScope.paymentMethods.map(m => (
               <MenuItem key={m.key} value={m.key}>
                 {m.label}
               </MenuItem>

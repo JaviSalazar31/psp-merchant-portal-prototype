@@ -1,8 +1,8 @@
 import { Box, Button, Grid, MenuItem, Stack, TextField } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { CURRENCIES } from '@/constants/currencies';
 import { SETTLEMENT_STATES, type SettlementStatusKey } from '@/constants/transactionStates';
+import { useMerchantScope } from '@/hooks/useMerchantScope';
 import { colors } from '@/theme/tokens';
 
 export interface SettlementFilters {
@@ -31,6 +31,8 @@ interface Props {
 }
 
 export function SettlementsFilterBar({ filters, onChange }: Props) {
+  const merchantScope = useMerchantScope();
+
   const set = <K extends keyof SettlementFilters>(key: K, value: SettlementFilters[K]) =>
     onChange({ ...filters, [key]: value });
 
@@ -88,7 +90,7 @@ export function SettlementsFilterBar({ filters, onChange }: Props) {
             <MenuItem value="">
               <em>Todas</em>
             </MenuItem>
-            {CURRENCIES.map(c => (
+            {merchantScope.currencies.map(c => (
               <MenuItem key={c.code} value={c.code}>
                 {c.code}
               </MenuItem>

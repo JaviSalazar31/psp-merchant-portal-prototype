@@ -34,6 +34,7 @@ const ONBOARDING_STATUSES: { value: OnboardingStatus; label: string; description
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: 'Admin', label: 'Admin' },
+  { value: 'Finance', label: 'Finance' },
   { value: 'Operator', label: 'Operator' },
   { value: 'Viewer', label: 'Viewer' },
 ];

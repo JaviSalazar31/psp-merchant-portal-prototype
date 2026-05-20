@@ -30,6 +30,7 @@ import UserFormModal from './UserFormModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useUsersStore } from '@/stores/usersStore';
 import type { MockMerchantUser } from '@/mocks/users';
+import type { UserRole } from '@/stores/authStore';
 import { toast } from '@/stores/toastStore';
 import { colors } from '@/theme/tokens';
 
@@ -107,7 +108,7 @@ export function UsersList() {
     setConfirmDelete(null);
   };
 
-  const handleFormSubmit = (values: { firstName: string; lastName: string; email: string; role: 'Admin' | 'Operator' | 'Viewer' }) => {
+  const handleFormSubmit = (values: { firstName: string; lastName: string; email: string; role: UserRole }) => {
     if (modal.mode === 'create') {
       addUser(values);
       toast.success(`Invitación enviada a ${values.email}.`);

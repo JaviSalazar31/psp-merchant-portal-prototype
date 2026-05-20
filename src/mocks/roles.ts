@@ -55,6 +55,58 @@ export const MOCK_ROLES: MockRole[] = [
     ],
   },
   {
+    key: 'Finance',
+    label: 'Finance',
+    description: 'Conciliación contable: visibilidad total de transacciones y settlements, sin acceso a configuración ni a gestión de usuarios.',
+    shortPermissions: [
+      'Ver transacciones',
+      'Exportar reportes',
+      'Ver settlements',
+      'Descargar comprobantes',
+    ],
+    permissions: [
+      partialAccess('Transacciones', [
+        ['Ver transacciones', true],
+        ['Exportar reportes', true],
+      ]),
+      partialAccess('Settlements', [
+        ['Ver settlements', true],
+        ['Exportar reportes', true],
+        ['Descargar comprobantes', true],
+      ]),
+      partialAccess('Usuarios', [
+        ['Ver usuarios', false],
+        ['Crear usuarios', false],
+        ['Editar usuarios', false],
+        ['Eliminar usuarios', false],
+      ]),
+      partialAccess('Roles', [
+        ['Ver roles', false],
+        ['Gestionar roles', false],
+      ]),
+      partialAccess('API Keys', [
+        ['Ver API Keys', false],
+        ['Crear API Keys', false],
+        ['Rotar API Keys', false],
+        ['Revocar API Keys', false],
+      ]),
+      partialAccess('Webhooks', [
+        ['Ver webhooks', false],
+        ['Crear webhooks', false],
+        ['Editar webhooks', false],
+        ['Eliminar webhooks', false],
+      ]),
+      partialAccess('Cuenta', [
+        ['Ver datos comercio', true],
+        ['Editar datos comercio', false],
+      ]),
+      partialAccess('Seguridad', [
+        ['Cambiar contraseña', true],
+        ['Configurar 2FA', true],
+      ]),
+    ],
+  },
+  {
     key: 'Operator',
     label: 'Operator',
     description: 'Operaciones diarias: ver transacciones, exportar reportes y consultar settlements.',

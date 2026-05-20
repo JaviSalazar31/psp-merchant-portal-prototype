@@ -48,6 +48,16 @@ export const MOCK_MERCHANT_USERS: MockMerchantUser[] = [
     lastLogin: new Date(today - days(2)),
   },
   {
+    id: 'mu_finance',
+    firstName: 'Sofía',
+    lastName: 'Torres',
+    email: 'sofia.torres@tacospancho.mx',
+    role: 'Finance',
+    status: 'Activo',
+    createdAt: new Date(today - days(20)),
+    lastLogin: new Date(today - days(1)),
+  },
+  {
     id: 'mu_4',
     firstName: 'Juan',
     lastName: 'García',

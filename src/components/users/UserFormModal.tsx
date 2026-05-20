@@ -28,7 +28,7 @@ const schema = yup.object({
   email: yup.string().email('Correo inválido').required('Obligatorio'),
   role: yup
     .mixed<UserRole>()
-    .oneOf(['Admin', 'Operator', 'Viewer'])
+    .oneOf(['Admin', 'Finance', 'Operator', 'Viewer'])
     .required('Obligatorio'),
 });
 

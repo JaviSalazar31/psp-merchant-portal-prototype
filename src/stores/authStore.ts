@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type OnboardingStatus = 'not_started' | 'in_progress' | 'pending_review' | 'approved' | 'rejected';
-export type UserRole = 'Admin' | 'Operator' | 'Viewer';
+export type UserRole = 'Admin' | 'Finance' | 'Operator' | 'Viewer';
 export type Language = 'es' | 'en' | 'pt-BR';
 
 export interface AuthUser {

@@ -267,7 +267,12 @@ function generateBatch(
     const firstName = CUSTOMER_FIRST[idx % CUSTOMER_FIRST.length];
     const lastName = CUSTOMER_LAST[(idx * 7) % CUSTOMER_LAST.length];
     const customerName = `${firstName} ${lastName}`;
-    const customerEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase().replace(/[^a-z]/g, '')}@ejemplo.com`;
+    // Normalizamos primero con NFD para descomponer acentos en caracter base + diacritico,
+    // despues quitamos los diacriticos (\u0300-\u036f). Asi 'Lopez' / 'Garcia' / 'Nunez'
+    // mantienen todas las letras en vez de quedar 'lpez', 'garca', 'nez'.
+    const emailUser = firstName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const emailDomain = lastName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+    const customerEmail = `${emailUser}.${emailDomain}@ejemplo.com`;
     const cardLast4 = paymentMethod.startsWith('CARD')
       ? String(1000 + ((idx * 31) % 9000))
       : undefined;

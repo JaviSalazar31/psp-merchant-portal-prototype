@@ -57,11 +57,22 @@ export interface UploadedDocument {
   size: number;
   uploadedAt: Date;
 }
-export interface CountryDocuments {
+/**
+ * Documentos cargados de la entidad legal en el Paso 5.
+ * `single` cubre los campos de un único archivo (la mayoría).
+ * `multi` se mantiene para futura extensión (por ej. dispositivos UBO en fases posteriores).
+ *
+ * Decisión MVP: un único set de documentos por cuenta (no por país de operación).
+ */
+export interface EntityDocuments {
   single: Record<string, UploadedDocument | null>;
   multi: Record<string, UploadedDocument[]>;
 }
-export type Step5Data = Record<string, CountryDocuments>;
+export type Step5Data = EntityDocuments;
+
+// Alias mantenido para evitar breaks en imports antiguos. Será removido cuando
+// se cierre el barrido completo del wizard (Corrida 8+).
+export type CountryDocuments = EntityDocuments;
 
 interface OnboardingState {
   currentStep: 1 | 2 | 3 | 4 | 5 | 6;

@@ -195,15 +195,21 @@ export function Step6EnviarRevision() {
       <SummaryAccordion
         n={5}
         title={(() => {
-          const totalRequired = ONBOARDING_DOCUMENTS.filter(d => d.required && !d.conditional).length;
-          const totalCountries = Object.keys(store.step5Data ?? {}).length;
-          const total = totalRequired * Math.max(1, totalCountries);
+          const incorporation = (store.step1Data?.incorporationCountry ?? null) as
+            | 'MX'
+            | 'CO'
+            | 'BR'
+            | null;
+          const visible = ONBOARDING_DOCUMENTS.filter(d => {
+            if (!d.visibleOnlyForIncorporation) return true;
+            return d.visibleOnlyForIncorporation === incorporation;
+          });
+          const total = visible.filter(d => d.required).length;
           let loaded = 0;
           if (store.step5Data) {
-            for (const docs of Object.values(store.step5Data)) {
-              loaded += Object.values(docs.single).filter(Boolean).length;
-              loaded += Object.values(docs.multi).filter(list => list.length > 0).length;
-            }
+            const docs = store.step5Data;
+            loaded += Object.values(docs.single).filter(Boolean).length;
+            loaded += Object.values(docs.multi).filter(list => list.length > 0).length;
           }
           return `Documentos (${loaded}/${total} cargados ✓)`;
         })()}
@@ -213,17 +219,25 @@ export function Step6EnviarRevision() {
         onEdit={() => navigate('/onboarding/step-5')}
       >
         {store.step5Data &&
-          Object.entries(store.step5Data).map(([country, docs]) => (
-            <Box key={country} sx={{ pb: 1.5 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                {COUNTRY_BY_CODE[country]?.flag} {COUNTRY_BY_CODE[country]?.name}
-              </Typography>
+          (() => {
+            const incorporation = (store.step1Data?.incorporationCountry ?? null) as
+              | 'MX'
+              | 'CO'
+              | 'BR'
+              | null;
+            const visible = ONBOARDING_DOCUMENTS.filter(d => {
+              if (!d.visibleOnlyForIncorporation) return true;
+              return d.visibleOnlyForIncorporation === incorporation;
+            });
+            const docs = store.step5Data!;
+            return (
               <Grid container spacing={0.5}>
-                {ONBOARDING_DOCUMENTS.map(d => {
+                {visible.map(d => {
                   const isMulti = !!(d.maxFiles && d.maxFiles > 1);
                   const loaded = isMulti
                     ? (docs.multi[d.key]?.length ?? 0) > 0
                     : !!docs.single[d.key];
+                  const labelText = typeof d.label === 'string' ? d.label : d.label(incorporation ?? 'MX');
                   return (
                     <Grid item xs={12} sm={6} key={d.key}>
                       <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -237,15 +251,15 @@ export function Step6EnviarRevision() {
                           variant="caption"
                           sx={{ color: loaded ? colors.textPrimary : colors.textMuted }}
                         >
-                          {d.label}
+                          {labelText}
                         </Typography>
                       </Stack>
                     </Grid>
                   );
                 })}
               </Grid>
-            </Box>
-          ))}
+            );
+          })()}
       </SummaryAccordion>
 
       <FormControlLabel

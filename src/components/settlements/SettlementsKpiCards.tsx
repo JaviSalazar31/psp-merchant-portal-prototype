@@ -91,7 +91,7 @@ export function SettlementsKpiCards({ rows }: Props) {
       </Grid>
       <Grid item xs={12} sm={6} lg={4}>
         <KpiCard
-          title="Pendiente"
+          title="Pending payout"
           value={topPending ? formatCurrency(topPending[1], topPending[0]) : '—'}
           hint={`${pending.length} settlement${pending.length === 1 ? '' : 's'}`}
         />

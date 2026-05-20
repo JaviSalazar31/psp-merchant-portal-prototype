@@ -101,9 +101,11 @@ export const PAYOUT_STATES: TransactionStatusKey[] = [
 
 export type SettlementStatusKey = 'PENDING' | 'IN_TRANSIT' | 'PAID' | 'FAILED';
 
+// Los labels de settlement, igual que los de transacciones, se muestran en inglés
+// por consistencia de marca (Cruce v2: Pending / Ready to settle / Settled).
 export const SETTLEMENT_STATES: Record<SettlementStatusKey, { label: string; bg: string; fg: string }> = {
-  PENDING: { label: 'Pendiente', bg: colors.statusPending.bg, fg: colors.statusPending.fg },
-  IN_TRANSIT: { label: 'En tránsito', bg: colors.statusInTransit.bg, fg: colors.statusInTransit.fg },
-  PAID: { label: 'Liquidado', bg: colors.statusPaid.bg, fg: colors.statusPaid.fg },
-  FAILED: { label: 'Falló', bg: colors.statusFailed.bg, fg: colors.statusFailed.fg },
+  PENDING: { label: 'Pending', bg: colors.statusPending.bg, fg: colors.statusPending.fg },
+  IN_TRANSIT: { label: 'Ready to settle', bg: colors.statusInTransit.bg, fg: colors.statusInTransit.fg },
+  PAID: { label: 'Settled', bg: colors.statusPaid.bg, fg: colors.statusPaid.fg },
+  FAILED: { label: 'Failed', bg: colors.statusFailed.bg, fg: colors.statusFailed.fg },
 };

@@ -28,17 +28,29 @@ import { useAuthStore } from '@/stores/authStore';
 import { useMerchantScope } from '@/hooks/useMerchantScope';
 import { MOCK_TRANSACTIONS } from '@/mocks/transactions';
 import { MOCK_SETTLEMENTS } from '@/mocks/settlements';
-import { COUNTRY_BY_CODE } from '@/constants/countries';
+import { COUNTRY_BY_CODE, countryToCurrency } from '@/constants/countries';
 import { formatCurrency } from '@/constants/currencies';
 import { colors } from '@/theme/tokens';
 
-const TOTAL_BALANCE_USD = 184_250.0;
-
-const DAILY_TRANSACTED_30D = [
-  4200, 4800, 4500, 5100, 4900, 5400, 5800, 5200, 6100, 5900,
-  6400, 6000, 6700, 6300, 7000, 6800, 7200, 6900, 7500, 7100,
-  7800, 7400, 8100, 7700, 8400, 8000, 8600, 8300, 8900, 9100,
-];
+// Series diarias por moneda local (Fase 1: cada comercio ve su moneda principal).
+// Los valores reflejan escalas realistas: BRL ~5x más pequeño que MXN, COP ~200x más grande.
+const DAILY_TRANSACTED_30D_BY_CURRENCY: Record<string, number[]> = {
+  MXN: [
+    84000, 96000, 90000, 102000, 98000, 108000, 116000, 104000, 122000, 118000,
+    128000, 120000, 134000, 126000, 140000, 136000, 144000, 138000, 150000, 142000,
+    156000, 148000, 162000, 154000, 168000, 160000, 172000, 166000, 178000, 182000,
+  ],
+  BRL: [
+    16800, 19200, 18000, 20400, 19600, 21600, 23200, 20800, 24400, 23600,
+    25600, 24000, 26800, 25200, 28000, 27200, 28800, 27600, 30000, 28400,
+    31200, 29600, 32400, 30800, 33600, 32000, 34400, 33200, 35600, 36400,
+  ],
+  COP: [
+    16_800_000, 19_200_000, 18_000_000, 20_400_000, 19_600_000, 21_600_000, 23_200_000, 20_800_000, 24_400_000, 23_600_000,
+    25_600_000, 24_000_000, 26_800_000, 25_200_000, 28_000_000, 27_200_000, 28_800_000, 27_600_000, 30_000_000, 28_400_000,
+    31_200_000, 29_600_000, 32_400_000, 30_800_000, 33_600_000, 32_000_000, 34_400_000, 33_200_000, 35_600_000, 36_400_000,
+  ],
+};
 
 const TRANSACTION_COUNT = 1284;
 const TRANSACTION_COUNT_SPARK = [820, 910, 870, 1010, 980, 1120, 1190, 1284];
@@ -49,7 +61,6 @@ const BALANCE_BY_CURRENCY: Record<string, { balance: number; availableForPayout:
   MXN: { balance: 3_142_580.5, availableForPayout: 2_980_000 },
   BRL: { balance: 412_300.75, availableForPayout: 388_000 },
   COP: { balance: 56_120_000, availableForPayout: 52_000_000 },
-  USD: { balance: TOTAL_BALANCE_USD, availableForPayout: 171_300 },
 };
 
 const HEAD_CELL = {
@@ -83,24 +94,29 @@ export function HomeDashboard() {
     [],
   );
 
-  // Una fila por cada país de operación + una fila USD consolidada.
+  // Una fila por cada país de operación del comercio. Fase 1 NO muestra
+  // consolidado en USD — decisión validada con Tech Lead: el comercio opera
+  // en moneda local y el consolidado USD vuelve en Fase 2 cuando se habiliten
+  // operaciones multi-país con liquidación cruzada.
   const balanceRows = useMemo(() => {
-    const rows = merchantScope.countries.map(c => ({
+    return merchantScope.countries.map(c => ({
       key: c.code,
       label: `${c.flag} ${c.name}`,
       currency: c.currency,
       ...(BALANCE_BY_CURRENCY[c.currency] ?? { balance: 0, availableForPayout: 0 }),
     }));
-    rows.push({
-      key: 'consolidado',
-      label: '🌎 Consolidado',
-      currency: 'USD',
-      ...BALANCE_BY_CURRENCY.USD,
-    });
-    return rows;
   }, [merchantScope.countries]);
 
-  const dailyTotal = DAILY_TRANSACTED_30D.reduce((a, b) => a + b, 0);
+  // Moneda principal del comercio según su país de residencia fiscal.
+  // En Fase 1 cada comercio ve su dashboard en una sola moneda local.
+  const primaryCurrency = countryToCurrency(user?.country);
+  const primaryCountryLabel = user?.country
+    ? COUNTRY_BY_CODE[user.country]?.name ?? user.country
+    : 'tu cuenta';
+  const primaryBalance = BALANCE_BY_CURRENCY[primaryCurrency]?.balance ?? 0;
+  const dailySeries = DAILY_TRANSACTED_30D_BY_CURRENCY[primaryCurrency] ?? [];
+  const dailyTotal = dailySeries.reduce((a, b) => a + b, 0);
+
   const isApproved = user?.onboardingStatus === 'approved';
 
   return (
@@ -136,20 +152,22 @@ export function HomeDashboard() {
         </Stack>
       )}
 
-      {/* Capa 1 — KPI principal: balance total consolidado en USD */}
+      {/* Capa 1 — Balance disponible en moneda local. Fase 1 muestra UNA moneda
+          (la del país de residencia fiscal del comercio). El detalle completo
+          por cada país operativo está más abajo (Capa 3). */}
       <Card sx={{ padding: { xs: 2.5, md: 3 }, backgroundColor: colors.brandDarkest }}>
         <Stack spacing={0.5}>
           <Typography
             variant="caption"
             sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
           >
-            Balance total
+            Balance disponible
           </Typography>
           <Typography sx={{ color: colors.brandPrimary, fontWeight: 800, fontSize: { xs: 36, md: 44 }, lineHeight: 1.1 }}>
-            {formatCurrency(TOTAL_BALANCE_USD, 'USD')}
+            {formatCurrency(primaryBalance, primaryCurrency)}
           </Typography>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-            Saldo consolidado en dólares. El detalle por moneda local está más abajo.
+            Saldo en {primaryCountryLabel} ({primaryCurrency}). El detalle por país de operación está más abajo.
           </Typography>
         </Stack>
       </Card>
@@ -163,13 +181,13 @@ export function HomeDashboard() {
                 Monto transaccionado diario
               </Typography>
               <Typography variant="h2" sx={{ fontWeight: 700 }}>
-                {formatCurrency(dailyTotal, 'USD')}
+                {formatCurrency(dailyTotal, primaryCurrency)}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Últimos 30 días · en dólares
+                Últimos 30 días · en {primaryCurrency}
               </Typography>
               <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-end', minHeight: 120 }}>
-                <MiniBarChart data={DAILY_TRANSACTED_30D} height={120} />
+                <MiniBarChart data={dailySeries} height={120} />
               </Box>
             </Stack>
           </Card>

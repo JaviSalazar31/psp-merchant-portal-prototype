@@ -73,7 +73,7 @@ export function Step1DatosEmpresa() {
       industry: existing?.industry ?? '',
       monthlyVolume: existing?.monthlyVolume ?? '',
       // Pre-poblado con 4 países: el usuario debe deseleccionar uno para cumplir el máximo de 3.
-      operationCountries: existing?.operationCountries ?? ['MX', 'CO', 'BR', 'CR'],
+      operationCountries: existing?.operationCountries ?? ['MX', 'CO', 'BR'],
     },
   });
 

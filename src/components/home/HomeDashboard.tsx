@@ -128,7 +128,7 @@ export function HomeDashboard() {
         >
           <CheckCircleIcon sx={{ color: colors.pwReqMet, fontSize: 22 }} />
           <Typography variant="body2" sx={{ flex: 1, color: colors.bannerSuccess.fg, fontWeight: 500 }}>
-            ¡Bienvenido a {user?.companyName ?? 'tu comercio'}! Tu cuenta está activa.
+            Bienvenido a Paynau, tu perfil fue aprobado. Ya podés acceder a todos los servicios.
           </Typography>
           <IconButton size="small" onClick={() => setWelcomeOpen(false)} aria-label="Cerrar">
             <CloseIcon fontSize="small" sx={{ color: colors.bannerSuccess.fg }} />

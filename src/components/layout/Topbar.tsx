@@ -1,6 +1,5 @@
 import { Box, IconButton, Stack, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import LanguageSelector from '@/components/common/LanguageSelector';
 import NotificationBell from './NotificationBell';
 import AvatarMenu from './AvatarMenu';
 import { useAuthStore } from '@/stores/authStore';
@@ -59,9 +58,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       <Box sx={{ flex: 1 }} />
 
       <Stack direction="row" alignItems="center" spacing={1}>
-        <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
-          <LanguageSelector />
-        </Box>
         <NotificationBell />
         <AvatarMenu />
       </Stack>

@@ -19,8 +19,11 @@ import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
-import { useAuthStore } from '@/stores/authStore';
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
+import CheckIcon from '@mui/icons-material/Check';
+import { useAuthStore, type Language } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
+import { toast } from '@/stores/toastStore';
 import { colors } from '@/theme/tokens';
 
 function initialsOf(firstName?: string, lastName?: string): string {
@@ -37,12 +40,30 @@ const ITEMS = [
   { label: 'Notificaciones', to: '/profile/notifications', icon: <NotificationsNoneOutlinedIcon fontSize="small" /> },
 ];
 
+// Los 3 idiomas oficiales del portal post-login (Cruce v2 14/05).
+// La selección persiste en localStorage vía uiStore (clave 'psp-ui-preferences')
+// y NO desloguea — fue bug de plataforma legacy y se evita explícitamente.
+// La traducción real de la UI queda fuera del MVP (es Fase 11); por ahora la
+// selección guarda preferencia y muestra un aviso para English / Português.
+const LANGUAGES: { code: Language; label: string; short: string }[] = [
+  { code: 'es', label: 'Español rioplatense', short: 'Español' },
+  { code: 'en', label: 'English', short: 'English' },
+  { code: 'pt-BR', label: 'Português brasileiro', short: 'Português' },
+];
+
+const COMING_SOON_TOAST: Partial<Record<Language, string>> = {
+  en: 'English version coming soon',
+  'pt-BR': 'Versão em português em breve',
+};
+
 export function AvatarMenu() {
   const navigate = useNavigate();
   const user = useAuthStore(s => s.user);
   const logout = useAuthStore(s => s.logout);
   const darkMode = useUIStore(s => s.darkMode);
   const toggleDarkMode = useUIStore(s => s.toggleDarkMode);
+  const language = useUIStore(s => s.language);
+  const setLanguage = useUIStore(s => s.setLanguage);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   if (!user) return null;
@@ -52,6 +73,15 @@ export function AvatarMenu() {
     setAnchorEl(null);
     navigate('/login', { replace: true });
   };
+
+  const handleLanguageChange = (code: Language) => {
+    setLanguage(code);
+    const comingSoon = COMING_SOON_TOAST[code];
+    if (comingSoon) toast.info(comingSoon);
+  };
+
+  const currentLanguageShort =
+    LANGUAGES.find(l => l.code === language)?.short ?? 'Español';
 
   return (
     <>
@@ -148,6 +178,43 @@ export function AvatarMenu() {
             <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: 14 }} />
           </MenuItem>
         ))}
+        <Divider />
+        {/* Idioma — header tenue + 3 opciones inline. No desloguea (regla NotebookLM). */}
+        <Box sx={{ paddingX: 2, paddingTop: 1, paddingBottom: 0.5 }}>
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <LanguageOutlinedIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
+            <Typography
+              variant="caption"
+              sx={{
+                color: colors.textSecondary,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
+              Idioma · {currentLanguageShort}
+            </Typography>
+          </Stack>
+        </Box>
+        {LANGUAGES.map(opt => {
+          const isCurrent = opt.code === language;
+          return (
+            <MenuItem
+              key={opt.code}
+              selected={isCurrent}
+              onClick={() => handleLanguageChange(opt.code)}
+              sx={{ paddingLeft: 4.5 }}
+            >
+              <ListItemText
+                primary={opt.label}
+                primaryTypographyProps={{ fontSize: 14, fontWeight: isCurrent ? 600 : 400 }}
+              />
+              {isCurrent && (
+                <CheckIcon sx={{ fontSize: 18, color: colors.brandPrimary, ml: 1 }} />
+              )}
+            </MenuItem>
+          );
+        })}
         <Divider />
         <MenuItem
           onClick={(e) => {

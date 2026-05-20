@@ -5,8 +5,8 @@ import {
   type MockApiKey,
 } from '@/mocks/apiKeys';
 
-// Las cuatro vigencias soportadas por la definición productiva.
-export type ApiKeyExpiration = '30d' | '90d' | '180d' | '365d';
+// Vigencias soportadas, incluida la opción sin expiración.
+export type ApiKeyExpiration = '30d' | '90d' | '180d' | '365d' | 'never';
 
 export interface CreateApiKeyPayload {
   name: string;
@@ -41,7 +41,8 @@ function randomChars(n: number) {
   return out;
 }
 
-function expirationToDate(exp: ApiKeyExpiration): Date {
+function expirationToDate(exp: ApiKeyExpiration): Date | null {
+  if (exp === 'never') return null;
   const now = new Date();
   const dayMs = 24 * 60 * 60 * 1000;
   const days =

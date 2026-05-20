@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -11,7 +11,11 @@ import {
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
-import PasswordChecklist, { isPasswordValid } from '@/components/common/PasswordChecklist';
+import PasswordChecklist, {
+  isPasswordValid,
+  DEFAULT_PASSWORD_RULES,
+  type PasswordRule,
+} from '@/components/common/PasswordChecklist';
 import PasswordStrengthBar from '@/components/common/PasswordStrengthBar';
 import { useSecurityStore } from '@/stores/securityStore';
 import { toast } from '@/stores/toastStore';
@@ -47,7 +51,19 @@ export function ChangePasswordInline({ open, onClose }: Props) {
     }
   }, [open]);
 
-  const allValid = isPasswordValid(newPwd);
+  // La 7ma regla compara contra la contraseña actual, por eso se arma con el closure.
+  const rules = useMemo<PasswordRule[]>(
+    () => [
+      ...DEFAULT_PASSWORD_RULES,
+      {
+        label: 'Debe ser diferente de la contraseña actual',
+        test: pw => pw.length > 0 && pw !== currentPwd,
+      },
+    ],
+    [currentPwd],
+  );
+
+  const allValid = isPasswordValid(newPwd, rules);
   const confirmsMatch = confirmPwd === newPwd && confirmPwd.length > 0;
   const canSubmit = currentPwd.length > 0 && allValid && confirmsMatch && !saving;
 
@@ -120,7 +136,7 @@ export function ChangePasswordInline({ open, onClose }: Props) {
               }}
             />
             <PasswordStrengthBar password={newPwd} />
-            <PasswordChecklist password={newPwd} />
+            <PasswordChecklist password={newPwd} rules={rules} />
           </Stack>
 
           <TextField

@@ -19,6 +19,7 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import LockoutDialog, { type LockoutType } from './LockoutDialog';
 import { useAuthStore } from '@/stores/authStore';
 import { redirectAfterLogin } from '@/routes/postAuthRedirect';
+import { colors } from '@/theme/tokens';
 
 const loginSchema = yup.object({
   email: yup
@@ -106,13 +107,31 @@ export function LoginForm() {
         </Typography>
       </Stack>
 
+      {/* Error de credenciales: mensaje único y genérico, sin indicar cuál campo falló. */}
+      {credentialError && (
+        <Box
+          role="alert"
+          sx={{
+            backgroundColor: colors.bannerError.bg,
+            border: `1px solid ${colors.bannerError.border}`,
+            borderRadius: 1.5,
+            paddingX: 1.5,
+            paddingY: 1,
+          }}
+        >
+          <Typography variant="body2" sx={{ color: colors.bannerError.fg, fontWeight: 500 }}>
+            Credenciales incorrectas. Verificá tu email y contraseña.
+          </Typography>
+        </Box>
+      )}
+
       <TextField
         {...register('email', { onChange: resetCredentialErrorOnEdit })}
         label="Correo electrónico"
         type="email"
         autoComplete="email"
         error={!!errors.email || credentialError}
-        helperText={errors.email?.message ?? (credentialError ? 'Credenciales incorrectas' : ' ')}
+        helperText={errors.email?.message ?? ' '}
         disabled={formDisabled}
       />
 
@@ -122,7 +141,7 @@ export function LoginForm() {
         type={showPassword ? 'text' : 'password'}
         autoComplete="current-password"
         error={!!errors.password || credentialError}
-        helperText={errors.password?.message ?? (credentialError ? 'Credenciales incorrectas' : ' ')}
+        helperText={errors.password?.message ?? ' '}
         disabled={formDisabled}
         InputProps={{
           endAdornment: (

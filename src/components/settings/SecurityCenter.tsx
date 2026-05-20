@@ -61,30 +61,37 @@ export function SecurityCenter() {
       </Stack>
 
       <CardSection title="Email" description="El correo asociado a tu cuenta. Si necesitás cambiarlo, contactá a soporte.">
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              backgroundColor: colors.bgSubtle,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colors.textSecondary,
-            }}
+        <Tooltip title="Para cambios, contactá a soporte" placement="top-start">
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1.5}
+            sx={{ backgroundColor: '#F5F5F5', borderRadius: 1.5, paddingX: 2, paddingY: 1.5 }}
           >
-            <EmailOutlinedIcon />
-          </Box>
-          <Stack spacing={0.25}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {user?.email ?? '—'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Solo lectura
-            </Typography>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                backgroundColor: colors.bgCard,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: colors.textSecondary,
+              }}
+            >
+              <EmailOutlinedIcon />
+            </Box>
+            <Stack spacing={0.25}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {user?.email ?? '—'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Solo lectura
+              </Typography>
+            </Stack>
           </Stack>
-        </Stack>
+        </Tooltip>
       </CardSection>
 
       <CardSection title="Autenticación de dos factores (2FA)">
@@ -115,11 +122,11 @@ export function SecurityCenter() {
                   Verificación en dos pasos
                 </Typography>
                 <Chip
-                  label="Próximamente"
+                  label="Próximamente disponible"
                   size="small"
                   sx={{
-                    backgroundColor: colors.bannerInfo.bg,
-                    color: colors.bannerInfo.fg,
+                    backgroundColor: colors.bgSubtle,
+                    color: colors.textSecondary,
                     fontWeight: 600,
                   }}
                 />

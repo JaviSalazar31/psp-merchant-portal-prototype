@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import FolderOpenOutlinedIcon from '@mui/icons-material/FolderOpenOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -145,14 +146,25 @@ export function DocumentUploadCard({
         {state === 'empty' && (
           <Stack
             alignItems="center"
-            spacing={0.5}
+            spacing={1}
             onClick={openPicker}
-            sx={{ cursor: 'pointer', paddingY: 1 }}
+            sx={{ cursor: 'pointer', paddingY: 1.5 }}
           >
             <CloudUploadOutlinedIcon sx={{ color: colors.brandPrimaryDark, fontSize: 28 }} />
             <Typography variant="body2" sx={{ color: colors.textPrimary }}>
-              Arrastrá o seleccioná archivo{isMulti ? `s (máx. ${maxFiles})` : ''}
+              Arrastrá tu{isMulti ? 's' : ''} archivo{isMulti ? `s (máx. ${maxFiles})` : ''} acá
             </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<FolderOpenOutlinedIcon fontSize="small" />}
+              onClick={e => {
+                e.stopPropagation();
+                openPicker();
+              }}
+            >
+              Explorar archivos
+            </Button>
             <Typography variant="caption" color="text.secondary">
               {acceptedFormats.map(f => f.toUpperCase()).join(', ')}, máx. {maxSizeMB} MB
               {hint ? ` · ${hint}` : ''}

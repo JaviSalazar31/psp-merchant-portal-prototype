@@ -56,10 +56,11 @@ export function Step1DatosEmpresa() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormValues>({
     resolver: yupResolver(schema),
-    mode: 'onChange',
+    // onTouched: los errores aparecen al perder foco, no mientras se escribe.
+    mode: 'onTouched',
     defaultValues: {
       fiscalId: existing?.fiscalId ?? '',
       fiscalResidenceCountry: existing?.fiscalResidenceCountry ?? '',
@@ -71,7 +72,8 @@ export function Step1DatosEmpresa() {
       website: existing?.website ?? '',
       industry: existing?.industry ?? '',
       monthlyVolume: existing?.monthlyVolume ?? '',
-      operationCountries: existing?.operationCountries ?? [],
+      // Pre-poblado con 4 países: el usuario debe deseleccionar uno para cumplir el máximo de 3.
+      operationCountries: existing?.operationCountries ?? ['MX', 'CO', 'BR', 'CR'],
     },
   });
 
@@ -333,7 +335,7 @@ export function Step1DatosEmpresa() {
         )}
       />
 
-      <WizardFooter onContinue={handleSubmit(onSubmit)} continueDisabled={false} />
+      <WizardFooter onContinue={handleSubmit(onSubmit)} continueDisabled={!isValid} />
     </Stack>
   );
 }

@@ -5,8 +5,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   MenuItem,
+  Radio,
+  RadioGroup,
   Stack,
   TextField,
   Typography,
@@ -39,6 +42,7 @@ const EXPIRATION_OPTIONS: { value: ApiKeyExpiration; label: string }[] = [
   { value: '90d', label: '90 días' },
   { value: '180d', label: '180 días' },
   { value: '365d', label: '365 días' },
+  { value: 'never', label: 'Sin expiración' },
 ];
 
 export function CreateApiKeyModal({ open, onClose, onCreated }: Props) {
@@ -107,19 +111,25 @@ export function CreateApiKeyModal({ open, onClose, onCreated }: Props) {
             ))}
           </TextField>
 
-          <TextField
-            select
-            label="Expiración"
-            value={expiration}
-            onChange={e => setExpiration(e.target.value as ApiKeyExpiration)}
-            disabled={saving}
-          >
-            {EXPIRATION_OPTIONS.map(opt => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </MenuItem>
-            ))}
-          </TextField>
+          <Stack spacing={0.5}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Expiración
+            </Typography>
+            <RadioGroup
+              value={expiration}
+              onChange={e => setExpiration(e.target.value as ApiKeyExpiration)}
+            >
+              {EXPIRATION_OPTIONS.map(opt => (
+                <FormControlLabel
+                  key={opt.value}
+                  value={opt.value}
+                  control={<Radio size="small" />}
+                  label={<Typography variant="body2">{opt.label}</Typography>}
+                  disabled={saving}
+                />
+              ))}
+            </RadioGroup>
+          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>

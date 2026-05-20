@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
-export type NotificationType = 'transaction' | 'settlement' | 'system' | 'security';
+// Los cuatro tipos productivos de notificación in-app para Fase 1.
+export type NotificationType =
+  | 'settlement_available'
+  | 'document_rejected'
+  | 'transactions_bulk'
+  | 'api_key_expiring';
 
 export interface InAppNotification {
   id: string;

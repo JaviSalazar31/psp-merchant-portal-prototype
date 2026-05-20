@@ -9,6 +9,7 @@ import {
   Divider,
   Grid,
   IconButton,
+  Link,
   Stack,
   Tab,
   Tabs,
@@ -271,7 +272,7 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
             />
             <KV label="Email" value={transaction.customerEmail} />
             {transaction.cardLast4 && (
-              <KV label="Tarjeta" value={`**** **** **** ${transaction.cardLast4}`} />
+              <KV label="Origen" value={`**** ${transaction.cardLast4}`} mono />
             )}
             <KV label="Moneda" value={transaction.currency} />
             {transaction.partnerReference && (
@@ -317,7 +318,12 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
             <KV label="Banco receptor" value="Santander México" />
             <KV label="CLABE emisora" value="012345678901234567" mono />
             <KV label="CLABE receptora" value="014321098765432109" mono />
-            <Box sx={{ pt: 1 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ sm: 'center' }}
+              sx={{ pt: 1 }}
+            >
               <Button
                 variant="outlined"
                 startIcon={<FileDownloadOutlinedIcon fontSize="small" />}
@@ -325,7 +331,15 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
               >
                 Descargar CEP PDF
               </Button>
-            </Box>
+              <Link
+                href="https://www.banxico.org.mx/cep/"
+                target="_blank"
+                rel="noopener"
+                sx={{ fontWeight: 600 }}
+              >
+                Consultar CEP en Banxico →
+              </Link>
+            </Stack>
           </Stack>
         )}
 

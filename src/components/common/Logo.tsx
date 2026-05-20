@@ -43,8 +43,8 @@ export function Logo({
       >
         PSP
       </text>
-      {/* Dot acento anclado a la esquina superior derecha de la última 'P'. */}
-      <circle cx="100" cy="12" r="5.5" fill={accentColor} />
+      {/* Dot acento anclado sobre el trazo vertical de la última 'P', como un acento tipográfico. */}
+      <circle cx="92" cy="11" r="5.5" fill={accentColor} />
     </Box>
   );
 }

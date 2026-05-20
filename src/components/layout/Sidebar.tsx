@@ -105,10 +105,12 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
             <Box
               sx={{
                 position: 'absolute',
-                top: 8,
-                right: 9,
-                width: 5,
-                height: 5,
+                // Dot anclado a la esquina superior del trazo vertical de la P,
+                // como acento tipografico (no flotando suelto a la derecha).
+                top: 5,
+                right: 12,
+                width: 6,
+                height: 6,
                 borderRadius: '50%',
                 backgroundColor: colors.brandPrimary,
               }}

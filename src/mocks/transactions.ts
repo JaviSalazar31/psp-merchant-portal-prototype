@@ -67,24 +67,21 @@ const PAY_OUT_DISTRIBUTION: TransactionStatusKey[] = [
 ];
 
 const COUNTRIES_DIST = [
-  'MX', 'MX', 'MX', 'MX', 'MX', 'MX', // 60%
-  'BR', 'BR',                          // 20%
-  'CO',                                // 10%
-  'AR',                                // 10%
+  'MX', 'MX', 'MX', 'MX', 'MX',         // 50%
+  'BR', 'BR', 'BR',                      // 30%
+  'CO', 'CO',                            // 20%
 ];
 
 const CURRENCY_BY_COUNTRY: Record<string, string> = {
   MX: 'MXN',
   BR: 'BRL',
   CO: 'COP',
-  AR: 'ARS',
 };
 
 const METHODS_BY_COUNTRY: Record<string, string[]> = {
-  MX: ['CARD_CREDIT', 'CARD_DEBIT', 'SPEI', 'OXXO'],
-  BR: ['CARD_CREDIT', 'CARD_DEBIT', 'PIX', 'BOLETO'],
-  CO: ['CARD_CREDIT', 'CARD_DEBIT', 'PSE'],
-  AR: ['CARD_CREDIT', 'CARD_DEBIT', 'CASH'],
+  MX: ['CARD_CREDIT', 'CARD_DEBIT', 'SPEI', 'CASH'],
+  BR: ['CARD_CREDIT', 'CARD_DEBIT', 'PIX', 'CASH'],
+  CO: ['CARD_CREDIT', 'CARD_DEBIT', 'CASH'],
 };
 
 const PROVIDERS = ['Kushki', 'PayCash', 'Unlimit'];
@@ -140,8 +137,6 @@ function pickAmount(country: string, baseIdx: number): number {
   const pattern = AMOUNT_PATTERNS[baseIdx % AMOUNT_PATTERNS.length];
   // COP es sin decimales y montos más grandes
   if (country === 'CO') return Math.round(pattern.base * 200);
-  // ARS también más grandes
-  if (country === 'AR') return Math.round(pattern.base * 10);
   return pattern.base;
 }
 
@@ -257,9 +252,9 @@ function generateBatch(
     const methods = METHODS_BY_COUNTRY[country];
     const paymentMethod = methods[idx % methods.length];
     const amount = pickAmount(country, idx);
-    const fees = Number((amount * 0.025).toFixed(country === 'CO' || country === 'AR' ? 0 : 2));
-    const taxes = Number((fees * 0.16).toFixed(country === 'CO' || country === 'AR' ? 0 : 2));
-    const netAmount = Number((amount - fees - taxes).toFixed(country === 'CO' || country === 'AR' ? 0 : 2));
+    const fees = Number((amount * 0.025).toFixed(country === 'CO' ? 0 : 2));
+    const taxes = Number((fees * 0.16).toFixed(country === 'CO' ? 0 : 2));
+    const netAmount = Number((amount - fees - taxes).toFixed(country === 'CO' ? 0 : 2));
     const approvedAt = status === 'AUTORIZADO' || status === 'EN_DISPUTA' || status === 'REEMBOLSADO'
       ? new Date(createdAt.getTime() + 6500)
       : null;

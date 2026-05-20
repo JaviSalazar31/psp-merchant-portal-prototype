@@ -16,7 +16,6 @@ import {
 import LogoutIcon from '@mui/icons-material/Logout';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
-import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
@@ -37,7 +36,6 @@ const ITEMS = [
   { label: 'Mi perfil', to: '/profile', icon: <PersonOutlineIcon fontSize="small" /> },
   { label: 'Cuenta', to: '/account', icon: <ManageAccountsOutlinedIcon fontSize="small" /> },
   { label: 'Centro de Seguridad', to: '/security', icon: <ShieldOutlinedIcon fontSize="small" /> },
-  { label: 'Notificaciones', to: '/profile/notifications', icon: <NotificationsNoneOutlinedIcon fontSize="small" /> },
 ];
 
 // Los 3 idiomas oficiales del portal post-login (Cruce v2 14/05).

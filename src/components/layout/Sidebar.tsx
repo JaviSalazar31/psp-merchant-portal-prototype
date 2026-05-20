@@ -5,6 +5,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -44,6 +45,7 @@ const ITEMS: SidebarItem[] = [
   },
   { to: '/settlements', label: 'Settlements', icon: <AccountBalanceWalletOutlinedIcon /> },
   { to: '/users', label: 'Users', icon: <GroupOutlinedIcon /> },
+  { to: '/notifications', label: 'Canales de notificación', icon: <WebhookOutlinedIcon /> },
   { to: '/_demo-404', label: 'Página 404', icon: <LinkOffIcon />, demo: true },
 ];
 

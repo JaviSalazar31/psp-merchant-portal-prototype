@@ -5,11 +5,12 @@ import { useAuthStore } from '@/stores/authStore';
 import { colors } from '@/theme/tokens';
 
 /**
- * Página /profile/notifications — canales de notificación del comercio.
+ * Página /notifications — canales de notificación del comercio.
  *
- * En el portal productivo, el módulo Desarrolladores se elimina y los canales
- * se acceden únicamente desde acá (decisión consolidada 18/05 con Tech Lead y
- * Arquitecto Frontend: el usuario administrativo no maneja APIs).
+ * Módulo independiente del sidebar (decisión consolidada 18/05 con Tech Lead y
+ * Arquitecto Frontend: el usuario administrativo no maneja APIs, por eso el
+ * módulo Desarrolladores no va al portal; los canales de notificación quedan
+ * accesibles directamente desde el menú lateral).
  *
  * En el prototipo coexiste con /developers para preservar validación visual,
  * pero ese módulo lleva un banner indicando que es vista interna de demo.

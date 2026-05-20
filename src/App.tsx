@@ -98,7 +98,7 @@ export default function App() {
             <Route path="/security" element={<SecurityCenterPage />} />
             <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/notifications" element={<NotificationChannelsPage />} />
+            <Route path="/notifications" element={<NotificationChannelsPage />} />
             <Route path="/profile/wizard" element={<CompanyProfilePage />} />
           </Route>
 

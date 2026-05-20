@@ -11,8 +11,9 @@ import { colors } from '@/theme/tokens';
  * Sólo disponible una vez que el comercio fue aprobado por Backoffice.
  *
  * NOTA: en el portal productivo este módulo se elimina y los canales se acceden
- * desde /profile/notifications. Se mantiene acá solo para validación visual de
- * QA UX/UI (sin link en sidebar ni en avatar dropdown — acceso únicamente por URL).
+ * desde /notifications (módulo independiente del sidebar). Se mantiene acá solo
+ * para validación visual de QA UX/UI (sin link en sidebar ni en avatar dropdown
+ * — acceso únicamente por URL).
  */
 export default function DevelopersPage() {
   const user = useAuthStore(s => s.user);
@@ -31,8 +32,8 @@ export default function DevelopersPage() {
 
   const demoBanner = (
     <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
-      Vista interna de demo. En productivo este módulo se elimina y los canales se
-      configuran desde el menú del avatar, en Notificaciones (/profile/notifications).
+      Vista interna de demo. En productivo este módulo se elimina y los canales de notificación se
+      configuran desde el módulo "Canales de notificación" del menú lateral (/notifications).
     </Alert>
   );
 

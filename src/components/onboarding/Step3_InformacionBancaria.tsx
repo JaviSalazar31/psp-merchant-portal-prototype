@@ -11,7 +11,8 @@ import {
 import { WizardFooter } from './OnboardingLayout';
 import SectionDivider from './SectionDivider';
 import CountryPills from '@/components/common/CountryPills';
-import { COUNTRIES } from '@/constants/countries';
+import ContextBanner from '@/components/common/ContextBanner';
+import { COUNTRIES, COUNTRY_BY_CODE } from '@/constants/countries';
 import { CURRENCIES } from '@/constants/currencies';
 import { useOnboardingStore, type BankAccountData, type Step3Data } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
@@ -65,6 +66,9 @@ export function Step3InformacionBancaria() {
   const current = activeCountry ?? countries[0];
   const bank = current ? byCountry[current] ?? emptyBank(current) : null;
 
+  const missingCountries = countries.filter(c => !isBankValid(byCountry[c]));
+  const allComplete = countries.length > 0 && missingCountries.length === 0;
+
   const setField = <K extends keyof BankAccountData>(field: K, value: BankAccountData[K]) => {
     if (!current) return;
     setByCountry(prev => ({
@@ -97,6 +101,13 @@ export function Step3InformacionBancaria() {
 
       {countries.length > 1 && (
         <CountryPills countries={countries} active={current} onChange={setActiveCountry} />
+      )}
+
+      {countries.length > 1 && missingCountries.length > 0 && (
+        <ContextBanner variant="warning">
+          Te faltan los datos bancarios de:{' '}
+          {missingCountries.map(c => COUNTRY_BY_CODE[c]?.name ?? c).join(', ')}.
+        </ContextBanner>
       )}
 
       <SectionDivider>CUENTA BANCARIA</SectionDivider>
@@ -192,6 +203,7 @@ export function Step3InformacionBancaria() {
       <WizardFooter
         onBack={() => navigate('/onboarding/step-2')}
         onContinue={onContinue}
+        continueDisabled={!allComplete}
       />
     </Stack>
   );

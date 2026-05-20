@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Grid, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { WizardFooter } from './OnboardingLayout';
 import CountryPills from '@/components/common/CountryPills';
+import ContextBanner from '@/components/common/ContextBanner';
 import { COUNTRIES, COUNTRY_BY_CODE } from '@/constants/countries';
 import { useOnboardingStore, type AddressData, type Step2Data } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
@@ -54,6 +55,9 @@ export function Step2DireccionComercial() {
   const current = activeCountry ?? countries[0];
   const address = current ? byCountry[current] ?? emptyAddress(current) : null;
 
+  const missingCountries = countries.filter(c => !isAddressValid(byCountry[c]));
+  const allComplete = countries.length > 0 && missingCountries.length === 0;
+
   const setField = <K extends keyof AddressData>(field: K, value: AddressData[K]) => {
     if (!current) return;
     setByCountry(prev => ({
@@ -89,6 +93,13 @@ export function Step2DireccionComercial() {
 
       {countries.length > 1 && (
         <CountryPills countries={countries} active={current} onChange={setActiveCountry} />
+      )}
+
+      {countries.length > 1 && missingCountries.length > 0 && (
+        <ContextBanner variant="warning">
+          Te falta completar la dirección de:{' '}
+          {missingCountries.map(c => COUNTRY_BY_CODE[c]?.name ?? c).join(', ')}.
+        </ContextBanner>
       )}
 
       <Grid container spacing={2}>
@@ -189,6 +200,7 @@ export function Step2DireccionComercial() {
       <WizardFooter
         onBack={() => navigate('/onboarding/step-1')}
         onContinue={onContinue}
+        continueDisabled={!allComplete}
       />
     </Stack>
   );

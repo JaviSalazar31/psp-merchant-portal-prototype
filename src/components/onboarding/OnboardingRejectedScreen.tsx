@@ -1,23 +1,28 @@
-import { Box, Button, Link, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Link, Stack, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { useNavigate } from 'react-router-dom';
 import WizardHeader from './WizardHeader';
+import { COUNTRY_BY_CODE } from '@/constants/countries';
 import { useAuthStore } from '@/stores/authStore';
 import { colors } from '@/theme/tokens';
 
 // Documentos mock que el Backoffice marca para corrección. En producción vendrán del backend.
-const REJECTED_DOCUMENTS: Array<{ name: string; reason: string }> = [
+// El campo `country` permite indicar correcciones parciales por país en operaciones multi-país.
+const REJECTED_DOCUMENTS: Array<{ name: string; country: string; reason: string }> = [
   {
     name: 'Acta Constitutiva',
+    country: 'MX',
     reason: 'El documento no incluye la firma del Representante Legal en la última página.',
   },
   {
     name: 'Comprobante de domicilio',
+    country: 'BR',
     reason: 'La fecha de emisión supera los 3 meses. Cargá uno más reciente.',
   },
   {
     name: 'ID del Representante Legal',
+    country: 'MX',
     reason: 'La imagen del frente está borrosa. Subí una versión legible en alta resolución.',
   },
 ];
@@ -119,9 +124,22 @@ export function OnboardingRejectedScreen() {
                   <DescriptionOutlinedIcon sx={{ fontSize: 18 }} />
                 </Box>
                 <Stack spacing={0.25} sx={{ flex: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {doc.name}
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {doc.name}
+                    </Typography>
+                    <Chip
+                      label={`${COUNTRY_BY_CODE[doc.country]?.flag ?? ''} ${COUNTRY_BY_CODE[doc.country]?.name ?? doc.country}`}
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        backgroundColor: colors.bgSubtle,
+                        color: colors.textSecondary,
+                      }}
+                    />
+                  </Stack>
                   <Typography variant="caption" color="text.secondary">
                     {doc.reason}
                   </Typography>

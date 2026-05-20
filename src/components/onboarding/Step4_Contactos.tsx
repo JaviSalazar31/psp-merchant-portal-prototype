@@ -21,6 +21,7 @@ import { WizardFooter } from './OnboardingLayout';
 import CountryPills from '@/components/common/CountryPills';
 import ContextBanner from '@/components/common/ContextBanner';
 import CrearContactoModal from './CrearContactoModal';
+import { COUNTRY_BY_CODE } from '@/constants/countries';
 import { DEPARTMENTS } from '@/constants/industries';
 import { useOnboardingStore, type Contact, type Step4Data } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
@@ -60,6 +61,9 @@ export function Step4Contactos() {
   const current = activeCountry ?? countries[0];
   const contacts = useMemo(() => (current ? byCountry[current] ?? [] : []), [byCountry, current]);
 
+  const missingCountries = countries.filter(c => (byCountry[c]?.length ?? 0) === 0);
+  const allComplete = countries.length > 0 && missingCountries.length === 0;
+
   const onSave = (contact: Contact) => {
     if (!current) return;
     setByCountry(prev => {
@@ -97,6 +101,13 @@ export function Step4Contactos() {
 
       {countries.length > 1 && (
         <CountryPills countries={countries} active={current} onChange={setActiveCountry} />
+      )}
+
+      {countries.length > 1 && missingCountries.length > 0 && (
+        <ContextBanner variant="warning">
+          Te falta agregar contactos de:{' '}
+          {missingCountries.map(c => COUNTRY_BY_CODE[c]?.name ?? c).join(', ')}.
+        </ContextBanner>
       )}
 
       <Box>
@@ -217,6 +228,7 @@ export function Step4Contactos() {
       <WizardFooter
         onBack={() => navigate('/onboarding/step-3')}
         onContinue={onContinue}
+        continueDisabled={!allComplete}
       />
     </Stack>
   );

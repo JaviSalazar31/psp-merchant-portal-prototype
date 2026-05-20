@@ -8,6 +8,7 @@ import SectionDivider from './SectionDivider';
 import CountryPills from '@/components/common/CountryPills';
 import ContextBanner from '@/components/common/ContextBanner';
 import DocumentUploadCard from '@/components/common/DocumentUploadCard';
+import { COUNTRY_BY_CODE } from '@/constants/countries';
 import { ONBOARDING_DOCUMENTS } from '@/constants/documentTypes';
 import {
   useOnboardingStore,
@@ -59,6 +60,9 @@ export function Step5Documentos() {
 
   const current = activeCountry ?? countries[0];
   const docs = current ? byCountry[current] ?? emptyCountryDocs() : null;
+
+  const missingCountries = countries.filter(c => !isCountryDocsComplete(byCountry[c]));
+  const allComplete = countries.length > 0 && missingCountries.length === 0;
 
   const setSingle = (key: string, file: UploadedDocument | null) => {
     if (!current) return;
@@ -155,6 +159,13 @@ export function Step5Documentos() {
         <CountryPills countries={countries} active={current} onChange={setActiveCountry} />
       )}
 
+      {countries.length > 1 && missingCountries.length > 0 && (
+        <ContextBanner variant="warning">
+          Te faltan documentos obligatorios de:{' '}
+          {missingCountries.map(c => COUNTRY_BY_CODE[c]?.name ?? c).join(', ')}.
+        </ContextBanner>
+      )}
+
       <SectionDivider>DOCUMENTO KYC</SectionDivider>
 
       <Stack
@@ -233,6 +244,7 @@ export function Step5Documentos() {
       <WizardFooter
         onBack={() => navigate('/onboarding/step-4')}
         onContinue={onContinue}
+        continueDisabled={!allComplete}
       />
     </Stack>
   );

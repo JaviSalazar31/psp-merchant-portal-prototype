@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Grid, Stack, Typography } from '@mui/material';
+import { saveAs } from 'file-saver';
 import DownloadIcon from '@mui/icons-material/Download';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { WizardFooter } from './OnboardingLayout';
@@ -18,6 +19,7 @@ import {
 } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
 import { colors } from '@/theme/tokens';
+import { generateKycDocx, kycDocxFilename, type KycCountry } from '@/utils/kyc/kycGenerator';
 
 function emptyCountryDocs(): CountryDocuments {
   return { single: {}, multi: {} };
@@ -98,21 +100,26 @@ export function Step5Documentos() {
     navigate('/onboarding/step-6');
   };
 
-  const handleDownloadTemplate = () => {
-    // Descarga simulada del .docx con un Blob mock.
-    const blob = new Blob(
-      [
-        'PSP KYC TEMPLATE (mock)\n\nEste archivo simula la plantilla descargable.\nEn producción será un .docx con campos pre-llenados.',
-      ],
-      { type: 'application/msword' },
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'psp-kyc-template.docx';
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Plantilla KYC descargada.');
+  const handleDownloadTemplate = async () => {
+    if (!current) return;
+    // País activo del wizard se mapea al template KYC correcto.
+    // MX/CO comparten template (formato PayCash adaptado a marca PSP).
+    // BR usa un template propio adaptado a la regulación brasileña (BACEN, Lei 9.613/1998).
+    const kycCountry: KycCountry | null =
+      current === 'MX' ? 'MX' : current === 'CO' ? 'CO' : current === 'BR' ? 'BR' : null;
+    if (!kycCountry) {
+      toast.error(`No hay plantilla KYC disponible para ${current}.`);
+      return;
+    }
+    try {
+      const blob = await generateKycDocx(kycCountry);
+      saveAs(blob, kycDocxFilename(kycCountry));
+      const countryName = COUNTRY_BY_CODE[current]?.name ?? current;
+      toast.success(`Plantilla KYC de ${countryName} descargada.`);
+    } catch (err) {
+      console.error('Error generando plantilla KYC:', err);
+      toast.error('No se pudo generar la plantilla KYC. Intentá de nuevo.');
+    }
   };
 
   if (!docs || !current) return null;

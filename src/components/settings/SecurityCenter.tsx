@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import ChangePasswordInline from './ChangePasswordInline';
@@ -60,38 +61,45 @@ export function SecurityCenter() {
         </Typography>
       </Stack>
 
-      <CardSection title="Email" description="El correo asociado a tu cuenta. Si necesitás cambiarlo, contactá a soporte.">
-        <Tooltip title="Para cambios, contactá a soporte" placement="top-start">
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1.5}
-            sx={{ backgroundColor: '#F5F5F5', borderRadius: 1.5, paddingX: 2, paddingY: 1.5 }}
+      <CardSection title="Email" description="El correo asociado a tu cuenta.">
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1.5}
+          sx={{ backgroundColor: '#F5F5F5', borderRadius: 1.5, paddingX: 2, paddingY: 1.5 }}
+        >
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              backgroundColor: colors.bgCard,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: colors.textSecondary,
+            }}
           >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                backgroundColor: colors.bgCard,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: colors.textSecondary,
-              }}
-            >
-              <EmailOutlinedIcon />
-            </Box>
-            <Stack spacing={0.25}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {user?.email ?? '—'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Solo lectura
-              </Typography>
-            </Stack>
+            <EmailOutlinedIcon />
+          </Box>
+          <Stack spacing={0.25} sx={{ flex: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {user?.email ?? '—'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Solo lectura
+            </Typography>
           </Stack>
-        </Tooltip>
+          <Tooltip
+            title="Por seguridad, el cambio de email debe solicitarse a soporte"
+            placement="top-end"
+          >
+            <InfoOutlinedIcon
+              sx={{ fontSize: 18, color: colors.textMuted, cursor: 'help' }}
+              aria-label="Información sobre cambio de email"
+            />
+          </Tooltip>
+        </Stack>
       </CardSection>
 
       <CardSection title="Autenticación de dos factores (2FA)">

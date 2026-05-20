@@ -111,21 +111,26 @@ export function UserAccountSettings() {
               />
             </Box>
 
-            <Tooltip title="Para cambios, contactá a soporte" placement="top-start">
-              <TextField
-                label="Correo electrónico"
-                value={user.email}
-                fullWidth
-                InputProps={{
-                  readOnly: true,
-                  endAdornment: (
-                    <InfoOutlinedIcon sx={{ fontSize: 18, color: colors.textMuted }} />
-                  ),
-                }}
-                helperText="Para cambios, contactá a soporte"
-                sx={{ '& .MuiInputBase-root': { backgroundColor: colors.bgSubtle } }}
-              />
-            </Tooltip>
+            <TextField
+              label="Correo electrónico"
+              value={user.email}
+              fullWidth
+              InputProps={{
+                readOnly: true,
+                endAdornment: (
+                  <Tooltip
+                    title="Por seguridad, el cambio de email debe solicitarse a soporte"
+                    placement="top-end"
+                  >
+                    <InfoOutlinedIcon
+                      sx={{ fontSize: 18, color: colors.textMuted, cursor: 'help' }}
+                      aria-label="Información sobre cambio de email"
+                    />
+                  </Tooltip>
+                ),
+              }}
+              sx={{ '& .MuiInputBase-root': { backgroundColor: colors.bgSubtle } }}
+            />
 
             <Box>
               <Typography variant="caption" sx={{ color: colors.textSecondary }}>

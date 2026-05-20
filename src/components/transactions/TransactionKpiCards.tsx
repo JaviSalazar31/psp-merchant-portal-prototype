@@ -1,6 +1,8 @@
 import { Card, Grid, Stack, Typography } from '@mui/material';
 import type { MockTransaction } from '@/mocks/transactions';
 import { formatCurrency } from '@/constants/currencies';
+import { countryToCurrency } from '@/constants/countries';
+import { useAuthStore } from '@/stores/authStore';
 import { colors } from '@/theme/tokens';
 
 interface KpiProps {
@@ -23,16 +25,21 @@ function approvalRate(rows: MockTransaction[]): number {
   return (ok / final.length) * 100;
 }
 
-function volumeByCurrency(rows: MockTransaction[]): { currency: string; total: number } {
-  const sums: Record<string, number> = {};
+/**
+ * Suma el volumen de transacciones autorizadas/reembolsadas que esten en la moneda
+ * principal del comercio. La moneda principal se deriva del pais registrado del
+ * usuario (MX -> MXN, CO -> COP, BR -> BRL...), no del ranking por volumen — eso
+ * llevaba a mostrar "En COP" para un comercio mexicano cuando las transacciones
+ * mock de Colombia eran mas grandes en magnitud nominal.
+ */
+function volumeInPrimaryCurrency(rows: MockTransaction[], primaryCurrency: string): number {
+  let total = 0;
   for (const r of rows) {
-    if (r.status === 'AUTORIZADO' || r.status === 'REEMBOLSADO') {
-      sums[r.currency] = (sums[r.currency] ?? 0) + r.amount;
+    if ((r.status === 'AUTORIZADO' || r.status === 'REEMBOLSADO') && r.currency === primaryCurrency) {
+      total += r.amount;
     }
   }
-  const sorted = Object.entries(sums).sort(([, a], [, b]) => b - a);
-  if (sorted.length === 0) return { currency: 'USD', total: 0 };
-  return { currency: sorted[0][0], total: sorted[0][1] };
+  return total;
 }
 
 function KpiCard({ title, value, hint }: { title: string; value: string; hint?: string }) {
@@ -64,8 +71,10 @@ function KpiCard({ title, value, hint }: { title: string; value: string; hint?: 
 }
 
 export function TransactionKpiCards({ scope, rows }: KpiProps) {
+  const user = useAuthStore(s => s.user);
+  const primaryCurrency = countryToCurrency(user?.country);
   const total = rows.length;
-  const vol = volumeByCurrency(rows);
+  const volumeTotal = volumeInPrimaryCurrency(rows, primaryCurrency);
   const today = todayCount(rows);
   const rate = approvalRate(rows);
 
@@ -82,8 +91,8 @@ export function TransactionKpiCards({ scope, rows }: KpiProps) {
       <Grid item xs={12} sm={6} lg={3}>
         <KpiCard
           title={isPayIn ? 'Monto procesado' : 'Volumen pagado'}
-          value={formatCurrency(vol.total, vol.currency)}
-          hint={`En ${vol.currency} (moneda principal)`}
+          value={formatCurrency(volumeTotal, primaryCurrency)}
+          hint={`En ${primaryCurrency} (moneda principal)`}
         />
       </Grid>
       <Grid item xs={12} sm={6} lg={3}>

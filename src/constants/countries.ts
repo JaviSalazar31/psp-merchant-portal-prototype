@@ -28,6 +28,15 @@ export const COUNTRY_BY_CODE: Record<string, Country> = COUNTRIES.reduce(
   {},
 );
 
+/**
+ * Devuelve el código de moneda principal para un país (ej: MX → MXN, CO → COP).
+ * Fallback a USD si el código de país no está mapeado.
+ */
+export function countryToCurrency(countryCode: string | undefined): string {
+  if (!countryCode) return 'USD';
+  return COUNTRY_BY_CODE[countryCode]?.currency ?? 'USD';
+}
+
 // Hints fiscales (label + placeholder) por país para el banner contextual "Flujo Local" del Step 1.
 export const FISCAL_ID_HINTS: Record<string, { label: string; placeholder: string; flowName: string }> = {
   MX: { label: 'RFC', placeholder: 'ABC123456XYZ', flowName: 'Flujo Local - México' },

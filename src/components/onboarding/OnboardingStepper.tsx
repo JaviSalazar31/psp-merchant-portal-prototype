@@ -5,13 +5,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import { colors } from '@/theme/tokens';
 
 export interface StepDef {
-  id: 1 | 2 | 3 | 4 | 5;
+  id: 1 | 2 | 3 | 4 | 5 | 6;
   label: string;
 }
 
 interface OnboardingStepperProps {
   steps: StepDef[];
-  currentStep: 1 | 2 | 3 | 4 | 5;
+  currentStep: 1 | 2 | 3 | 4 | 5 | 6;
   /** Pasos completados (datos guardados). Marcados con palomita verde. */
   completedSteps: number[];
   /** Pasos iniciados pero incompletos (datos parciales). Marcados con reloj ámbar. */

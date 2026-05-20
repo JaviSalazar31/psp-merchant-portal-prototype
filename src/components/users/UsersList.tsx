@@ -38,8 +38,9 @@ function initials(u: MockMerchantUser): string {
   return `${u.firstName[0] ?? '?'}${u.lastName[0] ?? ''}`.toUpperCase();
 }
 
-const ROLE_COLORS: Record<string, { bg: string; fg: string }> = {
+const ROLE_COLORS: Record<UserRole, { bg: string; fg: string }> = {
   Admin: { bg: '#FEE2E2', fg: '#991B1B' },
+  Finance: { bg: '#EDE9FE', fg: '#5B21B6' },
   Operator: { bg: '#DBEAFE', fg: '#1E40AF' },
   Viewer: { bg: '#F3F4F6', fg: '#374151' },
 };

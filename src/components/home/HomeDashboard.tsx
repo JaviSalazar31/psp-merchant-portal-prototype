@@ -8,24 +8,14 @@ import {
   IconButton,
   Link,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Sparkline from '@/components/common/Sparkline';
 import MiniBarChart from '@/components/common/MiniBarChart';
 import StatusBadge from '@/components/common/StatusBadge';
 import { useAuthStore } from '@/stores/authStore';
-import { useMerchantScope } from '@/hooks/useMerchantScope';
 import { MOCK_TRANSACTIONS } from '@/mocks/transactions';
 import { MOCK_SETTLEMENTS } from '@/mocks/settlements';
 import { COUNTRY_BY_CODE, countryToCurrency } from '@/constants/countries';
@@ -33,7 +23,6 @@ import { formatCurrency } from '@/constants/currencies';
 import { colors } from '@/theme/tokens';
 
 // Series diarias por moneda local (Fase 1: cada comercio ve su moneda principal).
-// Los valores reflejan escalas realistas: BRL ~5x más pequeño que MXN, COP ~200x más grande.
 const DAILY_TRANSACTED_30D_BY_CURRENCY: Record<string, number[]> = {
   MXN: [
     84000, 96000, 90000, 102000, 98000, 108000, 116000, 104000, 122000, 118000,
@@ -54,26 +43,10 @@ const DAILY_TRANSACTED_30D_BY_CURRENCY: Record<string, number[]> = {
 
 const TRANSACTION_COUNT = 1284;
 const TRANSACTION_COUNT_SPARK = [820, 910, 870, 1010, 980, 1120, 1190, 1284];
-const APPROVAL_RATE = 94.3;
-
-/** Balance mock por moneda. La tabla filtra las filas según los países del comercio. */
-const BALANCE_BY_CURRENCY: Record<string, { balance: number; availableForPayout: number }> = {
-  MXN: { balance: 3_142_580.5, availableForPayout: 2_980_000 },
-  BRL: { balance: 412_300.75, availableForPayout: 388_000 },
-  COP: { balance: 56_120_000, availableForPayout: 52_000_000 },
-};
-
-const HEAD_CELL = {
-  fontSize: 11,
-  letterSpacing: 0.5,
-  color: colors.textSecondary,
-  fontWeight: 700,
-};
 
 export function HomeDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore(s => s.user);
-  const merchantScope = useMerchantScope();
   const [welcomeOpen, setWelcomeOpen] = useState(true);
 
   const latestTransactions = useMemo(
@@ -94,30 +67,14 @@ export function HomeDashboard() {
     [],
   );
 
-  // Una fila por cada país de operación del comercio. Fase 1 NO muestra
-  // consolidado en USD — decisión validada con Tech Lead: el comercio opera
-  // en moneda local y el consolidado USD vuelve en Fase 2 cuando se habiliten
-  // operaciones multi-país con liquidación cruzada.
-  const balanceRows = useMemo(() => {
-    return merchantScope.countries.map(c => ({
-      key: c.code,
-      label: `${c.flag} ${c.name}`,
-      currency: c.currency,
-      ...(BALANCE_BY_CURRENCY[c.currency] ?? { balance: 0, availableForPayout: 0 }),
-    }));
-  }, [merchantScope.countries]);
-
   // Moneda principal del comercio según su país de residencia fiscal.
   // En Fase 1 cada comercio ve su dashboard en una sola moneda local.
   const primaryCurrency = countryToCurrency(user?.country);
-  const primaryCountryLabel = user?.country
-    ? COUNTRY_BY_CODE[user.country]?.name ?? user.country
-    : 'tu cuenta';
-  const primaryBalance = BALANCE_BY_CURRENCY[primaryCurrency]?.balance ?? 0;
   const dailySeries = DAILY_TRANSACTED_30D_BY_CURRENCY[primaryCurrency] ?? [];
   const dailyTotal = dailySeries.reduce((a, b) => a + b, 0);
 
   const isApproved = user?.onboardingStatus === 'approved';
+  const merchantName = user?.companyName ?? 'tu comercio';
 
   return (
     <Stack spacing={3}>
@@ -144,7 +101,7 @@ export function HomeDashboard() {
         >
           <CheckCircleIcon sx={{ color: colors.pwReqMet, fontSize: 22 }} />
           <Typography variant="body2" sx={{ flex: 1, color: colors.bannerSuccess.fg, fontWeight: 500 }}>
-            Bienvenido a Paynau, tu perfil fue aprobado. Ya podés acceder a todos los servicios.
+            Bienvenido a {merchantName}, tu perfil fue aprobado. Ya podés acceder a todos los servicios.
           </Typography>
           <IconButton size="small" onClick={() => setWelcomeOpen(false)} aria-label="Cerrar">
             <CloseIcon fontSize="small" sx={{ color: colors.bannerSuccess.fg }} />
@@ -152,27 +109,10 @@ export function HomeDashboard() {
         </Stack>
       )}
 
-      {/* Capa 1 — Balance disponible en moneda local. Fase 1 muestra UNA moneda
-          (la del país de residencia fiscal del comercio). El detalle completo
-          por cada país operativo está más abajo (Capa 3). */}
-      <Card sx={{ padding: { xs: 2.5, md: 3 }, backgroundColor: colors.brandDarkest }}>
-        <Stack spacing={0.5}>
-          <Typography
-            variant="caption"
-            sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
-          >
-            Balance disponible
-          </Typography>
-          <Typography sx={{ color: colors.brandPrimary, fontWeight: 800, fontSize: { xs: 36, md: 44 }, lineHeight: 1.1 }}>
-            {formatCurrency(primaryBalance, primaryCurrency)}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-            Saldo en {primaryCountryLabel} ({primaryCurrency}). El detalle por país de operación está más abajo.
-          </Typography>
-        </Stack>
-      </Card>
-
-      {/* Capa 2 — widgets de volumen, conteo y performance */}
+      {/* Widgets de volumen y conteo — Fase 1 no incluye Balance Disponible,
+          Tasa de Aprobación ni Balance por país (decisión 21/05 con Producto:
+          esas métricas requieren infraestructura que se libera en fases
+          posteriores). */}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Card sx={{ padding: 2.5, height: '100%' }}>
@@ -186,15 +126,15 @@ export function HomeDashboard() {
               <Typography variant="caption" color="text.secondary">
                 Últimos 30 días · en {primaryCurrency}
               </Typography>
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'flex-end', minHeight: 120 }}>
-                <MiniBarChart data={dailySeries} height={120} />
+              <Box sx={{ pt: 1, flex: 1, minHeight: 80 }}>
+                <MiniBarChart data={dailySeries} height={80} color={colors.brandPrimary} />
               </Box>
             </Stack>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} md={6}>
           <Card sx={{ padding: 2.5, height: '100%' }}>
-            <Stack spacing={1}>
+            <Stack spacing={1.5} sx={{ height: '100%' }}>
               <Typography variant="caption" sx={{ color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Conteo de transacciones
               </Typography>
@@ -210,68 +150,9 @@ export function HomeDashboard() {
             </Stack>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ padding: 2.5, height: '100%' }}>
-            <Stack spacing={1}>
-              <Typography variant="caption" sx={{ color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Tasa de aprobación
-              </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 700 }}>
-                {APPROVAL_RATE}%
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                <TrendingUpIcon sx={{ fontSize: 16, color: colors.pwReqMet }} />
-                <Typography variant="caption" sx={{ color: colors.pwReqMet, fontWeight: 600 }}>
-                  +0,4 pts vs mes anterior
-                </Typography>
-              </Stack>
-            </Stack>
-          </Card>
-        </Grid>
       </Grid>
 
-      {/* Capa 3 — balance por país / moneda, filtrado por los países del comercio */}
-      <Card sx={{ padding: { xs: 2, md: 2.5 } }}>
-        <Stack spacing={1.5}>
-          <Typography variant="h4">Balance por país</Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={HEAD_CELL}>PAÍS</TableCell>
-                  <TableCell sx={HEAD_CELL}>MONEDA</TableCell>
-                  <TableCell sx={HEAD_CELL} align="right">BALANCE</TableCell>
-                  <TableCell sx={HEAD_CELL} align="right">DISPONIBLE PARA PAYOUTS</TableCell>
-                  <TableCell sx={HEAD_CELL} align="right">DETALLE</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {balanceRows.map(row => (
-                  <TableRow key={row.key} hover>
-                    <TableCell sx={{ fontWeight: 600 }}>{row.label}</TableCell>
-                    <TableCell sx={{ color: colors.textSecondary }}>{row.currency}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600 }}>
-                      {formatCurrency(row.balance, row.currency)}
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: colors.textSecondary }}>
-                      {formatCurrency(row.availableForPayout, row.currency)}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Ver transacciones de la región">
-                        <IconButton size="small" onClick={() => navigate('/transactions/pay-in')}>
-                          <ChevronRightIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Stack>
-      </Card>
-
-      {/* Capa 5 — listas de resumen */}
+      {/* Listas de resumen — últimas transacciones + próximas liquidaciones */}
       <Grid container spacing={2}>
         <Grid item xs={12} lg={7}>
           <Card sx={{ padding: 2.5 }}>

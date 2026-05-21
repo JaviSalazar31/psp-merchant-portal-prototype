@@ -16,15 +16,6 @@ function todayCount(rows: MockTransaction[]): number {
   return rows.filter(r => r.createdAt >= start).length;
 }
 
-function approvalRate(rows: MockTransaction[]): number {
-  const final = rows.filter(r =>
-    ['AUTORIZADO', 'RECHAZADO', 'FALLIDO', 'EN_DISPUTA', 'REEMBOLSADO'].includes(r.status),
-  );
-  if (final.length === 0) return 0;
-  const ok = final.filter(r => r.status === 'AUTORIZADO' || r.status === 'REEMBOLSADO').length;
-  return (ok / final.length) * 100;
-}
-
 /**
  * Suma el volumen de transacciones autorizadas/reembolsadas que esten en la moneda
  * principal del comercio. La moneda principal se deriva del pais registrado del
@@ -76,35 +67,32 @@ export function TransactionKpiCards({ scope, rows }: KpiProps) {
   const total = rows.length;
   const volumeTotal = volumeInPrimaryCurrency(rows, primaryCurrency);
   const today = todayCount(rows);
-  const rate = approvalRate(rows);
 
   const isPayIn = scope === 'pay-in';
 
+  // Fase 1: se omite la tarjeta "Tasa de aprobación" (decisión 21/05 con
+  // Producto: requiere métricas de pipeline que se incorporan en fases
+  // posteriores). Reorganizamos las 3 tarjetas restantes para que ocupen
+  // todo el ancho en md+ (xs=12 / sm=6 / md=4).
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} md={4}>
         <KpiCard
           title={isPayIn ? 'Total de transacciones' : 'Total de pagos enviados'}
           value={`${total.toLocaleString('es-AR')}`}
         />
       </Grid>
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} md={4}>
         <KpiCard
           title={isPayIn ? 'Monto procesado' : 'Volumen pagado'}
           value={formatCurrency(volumeTotal, primaryCurrency)}
           hint={`En ${primaryCurrency} (moneda principal)`}
         />
       </Grid>
-      <Grid item xs={12} sm={6} lg={3}>
+      <Grid item xs={12} sm={6} md={4}>
         <KpiCard
           title={isPayIn ? 'Transacciones hoy' : 'Pagos hoy'}
           value={`${today}`}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} lg={3}>
-        <KpiCard
-          title={isPayIn ? 'Tasa de aprobación' : 'Tasa de éxito'}
-          value={`${rate.toFixed(1)}%`}
         />
       </Grid>
     </Grid>

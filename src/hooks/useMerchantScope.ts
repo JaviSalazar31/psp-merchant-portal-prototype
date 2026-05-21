@@ -27,7 +27,10 @@ export function useMerchantScope(): MerchantScope {
     const countries = codes
       .map(code => COUNTRY_BY_CODE[code])
       .filter((c): c is Country => Boolean(c));
-    const currencyCodes = Array.from(new Set([...countries.map(c => c.currency), 'USD']));
+    // Fase 1: solo monedas locales — USD ya no aparece como filtro porque el
+    // comercio opera en moneda local del país. La excepción es Volumen Mensual
+    // del Step 1 del onboarding, que sigue en USD por convención de mercado.
+    const currencyCodes = Array.from(new Set(countries.map(c => c.currency)));
     const currencies = currencyCodes
       .map(code => CURRENCY_BY_CODE[code])
       .filter((c): c is Currency => Boolean(c));

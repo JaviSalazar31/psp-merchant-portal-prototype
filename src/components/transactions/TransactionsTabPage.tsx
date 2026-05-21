@@ -1,15 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, Stack, Typography } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ViewColumnOutlinedIcon from '@mui/icons-material/ViewColumnOutlined';
-import type { GridColumnVisibilityModel } from '@mui/x-data-grid';
+import { Box, Stack, Typography } from '@mui/material';
 import TransactionFilterBar from './TransactionFilterBar';
 import TransactionKpiCards from './TransactionKpiCards';
 import TransactionsTable from './TransactionsTable';
 import TransactionDetailModal from './TransactionDetailModal';
-import ColumnsModal from './ColumnsModal';
-import AdvancedFiltersModal from './AdvancedFiltersModal';
-import ViewsDropdown from './ViewsDropdown';
 import { EMPTY_FILTERS, type TransactionFilters, hasActiveFilters } from './filterTypes';
 import { useFilteredTransactions } from './useFilteredTransactions';
 import { DEFAULT_VISIBLE_COLUMNS } from './transactionColumns';
@@ -20,13 +14,21 @@ interface Props {
   scope: 'pay-in';
 }
 
+/**
+ * Tab principal de Transactions — Fase 1 MVP.
+ *
+ * Cambios 21/05 con Producto:
+ * - Se quitan los botones "Filtros / Columnas / Vista" (overhead que el
+ *   comercio no necesita en V1). Los filtros básicos siguen disponibles
+ *   en la barra superior. Los datos adicionales se acceden vía el ícono
+ *   ojito en cada fila (drill-down).
+ * - Las columnas visibles quedan fijas en el set default. Para campos
+ *   extra (cliente, monto neto, fecha de aprobación, moneda) el comercio
+ *   abre el modal de detalle.
+ */
 export function TransactionsTabPage({ scope }: Props) {
   const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
-  const [activeViewKey, setActiveViewKey] = useState<string>('all');
-  const [columnVisibility, setColumnVisibility] = useState<GridColumnVisibilityModel>(DEFAULT_VISIBLE_COLUMNS);
   const [selected, setSelected] = useState<MockTransaction | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [columnsOpen, setColumnsOpen] = useState(false);
 
   const sourceRows = useMemo(
     () => MOCK_TRANSACTIONS.filter(t => t.type === scope),
@@ -34,56 +36,25 @@ export function TransactionsTabPage({ scope }: Props) {
   );
 
   const filtered = useFilteredTransactions(sourceRows, filters);
-
   const activeFilters = hasActiveFilters(filters);
 
   return (
     <Stack spacing={3}>
-      <TransactionFilterBar filters={filters} onChange={f => { setFilters(f); setActiveViewKey('all'); }} scope={scope} />
+      <TransactionFilterBar filters={filters} onChange={setFilters} scope={scope} />
       <TransactionKpiCards scope={scope} rows={filtered} />
 
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        spacing={1.5}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          <Box component="span" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
-            {filtered.length.toLocaleString('es-AR')}
-          </Box>{' '}
-          {filtered.length === 1 ? 'resultado' : 'resultados'} {activeFilters ? 'con los filtros aplicados' : 'encontrados'}
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button
-            variant="outlined"
-            startIcon={<FilterListIcon fontSize="small" />}
-            onClick={() => setFiltersOpen(true)}
-          >
-            Filtros
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<ViewColumnOutlinedIcon fontSize="small" />}
-            onClick={() => setColumnsOpen(true)}
-          >
-            Columnas
-          </Button>
-          <ViewsDropdown
-            activeKey={activeViewKey}
-            onSelect={v => {
-              setActiveViewKey(v.key);
-              setFilters(v.filters);
-            }}
-          />
-        </Stack>
-      </Stack>
+      <Typography variant="body2" color="text.secondary">
+        <Box component="span" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
+          {filtered.length.toLocaleString('es-AR')}
+        </Box>{' '}
+        {filtered.length === 1 ? 'resultado' : 'resultados'}{' '}
+        {activeFilters ? 'con los filtros aplicados' : 'encontrados'}
+      </Typography>
 
       <TransactionsTable
         rows={filtered}
         onRowClick={row => setSelected(row)}
-        columnVisibility={columnVisibility}
-        onColumnVisibilityChange={setColumnVisibility}
+        columnVisibility={DEFAULT_VISIBLE_COLUMNS}
         hasActiveFilters={activeFilters}
         onClearFilters={() => setFilters(EMPTY_FILTERS)}
       />
@@ -92,23 +63,6 @@ export function TransactionsTabPage({ scope }: Props) {
         transaction={selected}
         open={!!selected}
         onClose={() => setSelected(null)}
-      />
-
-      <AdvancedFiltersModal
-        open={filtersOpen}
-        filters={filters}
-        onClose={() => setFiltersOpen(false)}
-        onApply={f => {
-          setFilters(f);
-          setActiveViewKey('all');
-        }}
-      />
-
-      <ColumnsModal
-        open={columnsOpen}
-        visibility={columnVisibility}
-        onClose={() => setColumnsOpen(false)}
-        onApply={setColumnVisibility}
       />
     </Stack>
   );

@@ -1,4 +1,5 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import type { GridColDef } from '@mui/x-data-grid';
 import StatusBadge from '@/components/common/StatusBadge';
 import type { MockTransaction } from '@/mocks/transactions';
@@ -35,18 +36,6 @@ export const TRANSACTION_COLUMN_DEFS: GridColDef<MockTransaction>[] = [
           textOverflow: 'ellipsis',
         }}
       >
-        {String(value)}
-      </Box>
-    ),
-  },
-  {
-    field: 'reference',
-    headerName: 'REFERENCIA',
-    flex: 1.2,
-    minWidth: 180,
-    sortable: true,
-    renderCell: ({ value }) => (
-      <Box sx={{ fontFamily: 'monospace', fontSize: 12, color: colors.textSecondary }}>
         {String(value)}
       </Box>
     ),
@@ -184,12 +173,32 @@ export const TRANSACTION_COLUMN_DEFS: GridColDef<MockTransaction>[] = [
     sortable: true,
     renderCell: ({ value }) => <StatusBadge status={String(value)} />,
   },
+  {
+    field: '__detail__',
+    headerName: 'DETALLE',
+    width: 90,
+    sortable: false,
+    filterable: false,
+    disableColumnMenu: true,
+    align: 'center',
+    headerAlign: 'center',
+    renderCell: () => (
+      <Tooltip title="Ver detalle de la transacción">
+        <IconButton size="small" sx={{ color: colors.textSecondary }}>
+          <VisibilityOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ),
+  },
 ];
 
-// Columnas visibles por default (las otras quedan ocultas en el modelo de visibilidad).
+// Columnas visibles por default. En Fase 1 (decisión 21/05 con Producto)
+// quitamos el modal "Columnas" del UI — el comercio ve un set fijo de columnas
+// con los datos esenciales, y para ver datos adicionales abre el detalle
+// (ícono ojito). Las columnas extra como customerName, netAmount, approvedAt,
+// currency se exponen en el modal de detalle, no en la tabla.
 export const DEFAULT_VISIBLE_COLUMNS: Record<string, boolean> = {
   id: true,
-  reference: true,
   createdAt: true,
   country: true,
   paymentMethod: true,
@@ -201,6 +210,7 @@ export const DEFAULT_VISIBLE_COLUMNS: Record<string, boolean> = {
   approvedAt: false,
   customerName: false,
   status: true,
+  __detail__: true,
 };
 
 export const COLUMN_LABELS: Record<string, string> = TRANSACTION_COLUMN_DEFS.reduce(

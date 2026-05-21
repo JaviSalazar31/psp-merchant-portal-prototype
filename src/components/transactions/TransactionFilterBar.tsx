@@ -30,6 +30,11 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
   const statusOptions: TransactionStatusKey[] =
     scope === 'pay-out' ? PAYOUT_STATES : (Object.keys(TRANSACTION_STATES) as TransactionStatusKey[]);
 
+  // El filtro "País" tiene sentido solo si el comercio opera en más de uno.
+  // Si tiene un solo país de operación, todas las transacciones son del mismo
+  // país y exponer el filtro es ruido innecesario.
+  const showCountryFilter = merchantScope.countries.length > 1;
+
   return (
     <Box
       sx={{
@@ -51,26 +56,28 @@ export function TransactionFilterBar({ filters, onChange, scope }: Props) {
             }}
           />
         </Grid>
-        <Grid item xs={6} md={2}>
-          <TextField
-            select
-            size="small"
-            value={filters.country[0] ?? ''}
-            onChange={e => set('country', e.target.value ? [e.target.value] : [])}
-            label="País"
-            SelectProps={{ displayEmpty: true }}
-            InputLabelProps={{ shrink: true }}
-          >
-            <MenuItem value="">
-              <em>Todos</em>
-            </MenuItem>
-            {merchantScope.countries.map(c => (
-              <MenuItem key={c.code} value={c.code}>
-                {c.flag} {c.code}
+        {showCountryFilter && (
+          <Grid item xs={6} md={2}>
+            <TextField
+              select
+              size="small"
+              value={filters.country[0] ?? ''}
+              onChange={e => set('country', e.target.value ? [e.target.value] : [])}
+              label="País"
+              SelectProps={{ displayEmpty: true }}
+              InputLabelProps={{ shrink: true }}
+            >
+              <MenuItem value="">
+                <em>Todos</em>
               </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
+              {merchantScope.countries.map(c => (
+                <MenuItem key={c.code} value={c.code}>
+                  {c.flag} {c.code}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+        )}
         <Grid item xs={6} md={2}>
           <TextField
             select

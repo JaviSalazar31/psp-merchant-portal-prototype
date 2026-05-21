@@ -32,6 +32,7 @@ import PasswordChecklist, {
 import PasswordStrengthBar from '@/components/common/PasswordStrengthBar';
 import { COUNTRIES } from '@/constants/countries';
 import { useAuthStore, type Language } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
 import { redirectAfterLogin } from '@/routes/postAuthRedirect';
 import { colors } from '@/theme/tokens';
 
@@ -73,6 +74,11 @@ type FormValues = yup.InferType<typeof registroSchema>;
 export function RegistroForm() {
   const navigate = useNavigate();
   const registerNewUser = useAuthStore(s => s.registerNewUser);
+  // El idioma elegido en el registro se propaga al uiStore para que el resto
+  // de la app (AvatarMenu, LanguageSelector, banners post-auth) lea esa
+  // preferencia. Antes vivía solo en user.language y el portal mostraba
+  // siempre 'es' por default — bug detectado 21/05 en demo con equipo.
+  const setUiLanguage = useUIStore(s => s.setLanguage);
 
   const [showPw, setShowPw] = useState(false);
   const [showPwConfirm, setShowPwConfirm] = useState(false);
@@ -121,6 +127,9 @@ export function RegistroForm() {
       password: data.password,
       language: data.language,
     });
+    // Propagar el idioma elegido en el registro a la preferencia de UI
+    // para que se mantenga durante todo el flujo de onboarding y el portal.
+    setUiLanguage(data.language);
     setSubmitting(false);
     // Después de registrarse, vamos a la pantalla de confirm-email del flujo.
     const token = `tok_${user.id}`;

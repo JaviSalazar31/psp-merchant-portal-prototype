@@ -63,25 +63,38 @@ const schema = yup.object({
   fiscalId: yup
     .string()
     .required('Obligatorio')
-    .test('fiscal-id-format', function (value) {
-      const country = this.parent.fiscalResidenceCountry as string | undefined;
-      if (!value) return this.createError({ message: 'Obligatorio' });
-      if (!country) return true; // si no hay país, no validamos contra patrón
-      const rule = FISCAL_ID_RULES[country];
-      if (!rule) return true;
-      const cleaned = value.trim();
-      if (cleaned.length < rule.minLen || cleaned.length > rule.maxLen) {
-        return this.createError({
-          message: `Debe tener entre ${rule.minLen} y ${rule.maxLen} caracteres (ej: ${rule.example})`,
-        });
-      }
-      if (!rule.pattern.test(cleaned)) {
-        return this.createError({
-          message: `Formato inválido. Ejemplo válido: ${rule.example}`,
-        });
-      }
-      return true;
-    }),
+    .test(
+      'fiscal-id-format',
+      'Formato inválido',
+      function (value) {
+        const country = this.parent.fiscalResidenceCountry as string | undefined;
+        if (!value) return this.createError({ message: 'Obligatorio' });
+        if (!country) {
+          // Sin país no podemos validar formato específico, pero sí impedir
+          // entradas obviamente inválidas (mínimo 6 caracteres alfanuméricos).
+          if (value.trim().length < 6) {
+            return this.createError({
+              message: 'Seleccioná primero el país de residencia fiscal',
+            });
+          }
+          return true;
+        }
+        const rule = FISCAL_ID_RULES[country];
+        if (!rule) return true;
+        const cleaned = value.trim();
+        if (cleaned.length < rule.minLen || cleaned.length > rule.maxLen) {
+          return this.createError({
+            message: `Debe tener entre ${rule.minLen} y ${rule.maxLen} caracteres (ej: ${rule.example})`,
+          });
+        }
+        if (!rule.pattern.test(cleaned)) {
+          return this.createError({
+            message: `Formato inválido. Ejemplo válido: ${rule.example}`,
+          });
+        }
+        return true;
+      },
+    ),
   commercialName: yup.string().default(''),
   legalName: yup
     .string()

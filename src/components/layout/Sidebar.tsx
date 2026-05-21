@@ -1,16 +1,15 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
-import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
-import WebhookOutlinedIcon from '@mui/icons-material/WebhookOutlined';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import LogoutIcon from '@mui/icons-material/Logout';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Logo from '@/components/common/Logo';
+import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { colors } from '@/theme/tokens';
 
@@ -36,21 +35,9 @@ interface SidebarItem {
 const ITEMS: SidebarItem[] = [
   { to: '/home', label: 'Home', icon: <HomeOutlinedIcon /> },
   { to: '/transactions/pay-in', label: 'Transactions', icon: <SwapHorizIcon />, matchPrefix: '/transactions' },
-  {
-    label: 'Pay-Out',
-    icon: <PaymentsOutlinedIcon />,
-    disabled: true,
-    indent: true,
-    tooltip: 'Próximamente disponible',
-  },
   { to: '/settlements', label: 'Settlements', icon: <AccountBalanceWalletOutlinedIcon /> },
-  { to: '/users', label: 'Users', icon: <GroupOutlinedIcon /> },
-  { to: '/notifications', label: 'Canales de notificación', icon: <WebhookOutlinedIcon /> },
+  { to: '/configuracion', label: 'Configuración', icon: <SettingsOutlinedIcon />, matchPrefix: '/configuracion' },
   { to: '/_demo-404', label: 'Página 404', icon: <LinkOffIcon />, demo: true },
-];
-
-const FOOTER_ITEMS: SidebarItem[] = [
-  { to: '/profile/wizard', label: 'Perfil', icon: <AccountCircleOutlinedIcon /> },
 ];
 
 interface SidebarProps {
@@ -61,14 +48,22 @@ interface SidebarProps {
 export function Sidebar({ variant, onNavigate }: SidebarProps) {
   const collapsed = useUIStore(s => s.sidebarCollapsed) && variant === 'permanent';
   const toggle = useUIStore(s => s.toggleSidebar);
+  const logout = useAuthStore(s => s.logout);
+  const navigate = useNavigate();
 
   const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
+
+  const handleLogout = () => {
+    onNavigate?.();
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <Box
       sx={{
         width,
-        height: '100vh',
+        height: '100%',
         backgroundColor: colors.bgCard,
         borderRight: `1px solid ${colors.borderDefault}`,
         display: 'flex',
@@ -119,7 +114,7 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
             />
           </Box>
         ) : (
-          <Logo width={68} />
+          <Logo width={96} />
         )}
       </Box>
 
@@ -144,14 +139,38 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
           gap: 0.25,
         }}
       >
-        {FOOTER_ITEMS.map(item => (
-          <SidebarRow
-            key={item.to ?? item.label}
-            item={item}
-            collapsed={collapsed}
-            onNavigate={onNavigate}
-          />
-        ))}
+        {/* Cerrar sesión — acción ubicada en el footer del sidebar para
+            acceso de un solo click sin tener que abrir el AvatarMenu. */}
+        <Tooltip title={collapsed ? 'Cerrar sesión' : ''} placement="right">
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1.5}
+            component="button"
+            onClick={handleLogout}
+            sx={{
+              background: 'none',
+              border: 'none',
+              width: '100%',
+              paddingY: 1,
+              paddingX: 1.25,
+              borderRadius: 1.5,
+              cursor: 'pointer',
+              color: colors.textPrimary,
+              textAlign: 'left',
+              '&:hover': { backgroundColor: colors.bgSubtle },
+            }}
+          >
+            <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
+              <LogoutIcon />
+            </Box>
+            {!collapsed && (
+              <Typography variant="body2" sx={{ fontWeight: 500, flex: 1 }}>
+                Cerrar sesión
+              </Typography>
+            )}
+          </Stack>
+        </Tooltip>
         {variant === 'permanent' && (
           <Box sx={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end', mt: 0.25 }}>
             <Tooltip title={collapsed ? 'Expandir' : 'Contraer'} placement="right">

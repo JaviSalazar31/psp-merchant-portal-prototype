@@ -16,7 +16,7 @@ import {
 import LogoutIcon from '@mui/icons-material/Logout';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
 import CheckIcon from '@mui/icons-material/Check';
@@ -29,11 +29,12 @@ function initialsOf(firstName?: string, lastName?: string): string {
   return `${firstName?.[0] ?? '?'}${lastName?.[0] ?? ''}`.toUpperCase();
 }
 
-// Operador (contexto multi-tenant): el comercio opera bajo esta red comercial.
-const OPERATOR_NAME = 'Red Efectiva';
+// Header del menú: muestra el comercio del usuario logueado (companyName del
+// authStore). Antes era una constante hardcoded "Red Efectiva" — pasamos al
+// dato dinámico para que cada comercio vea su propio nombre.
 
 const ITEMS = [
-  { label: 'Mi perfil', to: '/profile', icon: <PersonOutlineIcon fontSize="small" /> },
+  { label: 'Información', to: '/profile', icon: <InfoOutlinedIcon fontSize="small" /> },
   { label: 'Cuenta', to: '/account', icon: <ManageAccountsOutlinedIcon fontSize="small" /> },
   { label: 'Centro de Seguridad', to: '/security', icon: <ShieldOutlinedIcon fontSize="small" /> },
 ];
@@ -144,7 +145,7 @@ export function AvatarMenu() {
               display: 'block',
             }}
           >
-            {OPERATOR_NAME}
+            {user.companyName}
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {user.firstName} {user.lastName}

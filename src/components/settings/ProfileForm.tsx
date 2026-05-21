@@ -98,7 +98,7 @@ export function ProfileForm() {
   return (
     <Stack spacing={3}>
       <Stack spacing={0.5}>
-        <Typography variant="h1">Mi perfil</Typography>
+        <Typography variant="h1">Información</Typography>
         <Typography variant="body1" color="text.secondary">
           Gestioná tus datos personales, preferencias y notificaciones.
         </Typography>

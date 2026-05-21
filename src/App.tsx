@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -18,11 +18,9 @@ import ReviewPendingPage from '@/pages/ReviewPendingPage';
 import HomePage from '@/pages/HomePage';
 import TransactionsPayInPage from '@/pages/TransactionsPayInPage';
 import SettlementsPage from '@/pages/SettlementsPage';
-import UsersPage from '@/pages/UsersPage';
+import ConfiguracionPage from '@/pages/ConfiguracionPage';
 import AccountPage from '@/pages/AccountPage';
 import SecurityCenterPage from '@/pages/SecurityCenterPage';
-import DevelopersPage from '@/pages/DevelopersPage';
-import NotificationChannelsPage from '@/pages/NotificationChannelsPage';
 import ProfilePage from '@/pages/ProfilePage';
 import CompanyProfilePage from '@/pages/CompanyProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
@@ -40,6 +38,26 @@ import TransactionsLayout from '@/components/transactions/TransactionsLayout';
 export default function App() {
   const darkMode = useUIStore(s => s.darkMode);
   const theme = useMemo(() => buildMuiTheme(darkMode ? 'dark' : 'light'), [darkMode]);
+
+  // Bloqueo global del comportamiento default del navegador para drag & drop.
+  // Cuando el usuario suelta un archivo FUERA de un dropzone de la app, el
+  // navegador por default abre el archivo en una nueva pestaña — comportamiento
+  // confuso y no deseado (decisión 21/05 con Producto). Acá interceptamos
+  // dragover y drop a nivel window para que el archivo simplemente no haga
+  // nada si se suelta fuera de un dropzone. Los dropzones individuales
+  // (DocumentUploadCard) llaman stopPropagation, así que su funcionalidad
+  // queda intacta.
+  useEffect(() => {
+    const preventDefaults = (e: DragEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('dragover', preventDefaults);
+    window.addEventListener('drop', preventDefaults);
+    return () => {
+      window.removeEventListener('dragover', preventDefaults);
+      window.removeEventListener('drop', preventDefaults);
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -93,12 +111,14 @@ export default function App() {
             </Route>
 
             <Route path="/settlements" element={<SettlementsPage />} />
-            <Route path="/users" element={<UsersPage />} />
+            <Route path="/configuracion" element={<ConfiguracionPage />} />
+            {/* Aliases de retro-compatibilidad — todas redirigen a Configuración */}
+            <Route path="/users" element={<Navigate to="/configuracion" replace />} />
+            <Route path="/notifications" element={<Navigate to="/configuracion" replace />} />
+            <Route path="/developers" element={<Navigate to="/configuracion" replace />} />
             <Route path="/account" element={<AccountPage />} />
             <Route path="/security" element={<SecurityCenterPage />} />
-            <Route path="/developers" element={<DevelopersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/notifications" element={<NotificationChannelsPage />} />
             <Route path="/profile/wizard" element={<CompanyProfilePage />} />
           </Route>
 

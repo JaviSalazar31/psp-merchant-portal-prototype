@@ -41,9 +41,9 @@ export function AppLayout() {
   });
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: colors.bgPage }}>
+    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: colors.bgPage, overflow: 'hidden' }}>
       {/* Sidebar permanente en MD+ */}
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+      <Box sx={{ display: { xs: 'none', md: 'block' }, flexShrink: 0, height: '100%' }}>
         <Sidebar variant="permanent" />
       </Box>
 

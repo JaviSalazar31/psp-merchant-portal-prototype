@@ -10,7 +10,7 @@ Sirve como referencia visual para UX/UI y como arquitectura base sobre la que se
 
 ## URL pública
 
-> *(Pendiente de deploy a Vercel)*
+> https://psp-merchant-portal-prototype.vercel.app
 
 ---
 

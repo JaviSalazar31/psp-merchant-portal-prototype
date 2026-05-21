@@ -33,9 +33,21 @@ export interface BankAccountData {
   accountNumber: string;
   accountHolder: string;
   bankAddress: string;
-  routingNumber: string;
-  iban: string;
-  swift: string;
+  /** México: CLABE de 18 dígitos. */
+  clabe?: string;
+  /** Brasil: número de agencia bancaria (4-5 dígitos). */
+  agencyNumber?: string;
+  /** Brasil/Colombia: tipo de cuenta (corriente/ahorros). */
+  accountType?: 'corriente' | 'ahorros' | '';
+  /** Brasil: tipo de documento del titular (CPF/CNPJ). */
+  holderDocumentType?: 'CPF' | 'CNPJ' | '';
+  /** Brasil/Colombia: documento del titular (CPF/CNPJ/Cédula/NIT). */
+  holderDocumentNumber?: string;
+  /** Mantenidos para retro-compatibilidad con sesiones anteriores del wizard,
+      ya no se exponen en el UI (decisión 21/05). */
+  routingNumber?: string;
+  iban?: string;
+  swift?: string;
   currency: string;
 }
 export type Step3Data = Record<string, BankAccountData>;

@@ -25,15 +25,87 @@ import { colors } from '@/theme/tokens';
 // Máximo de tres países de operación según la definición productiva de Fase 1.
 const MAX_OPERATION_COUNTRIES = 3;
 
+// Patrones de identificación fiscal por país (validación de forma — la
+// verificación de dígito verificador completa queda server-side en
+// producción, acá aplicamos validación de formato para evitar entradas
+// claramente inválidas, alineado a buenas prácticas de mercado fintech
+// LATAM).
+const FISCAL_ID_RULES: Record<
+  string,
+  { pattern: RegExp; minLen: number; maxLen: number; example: string }
+> = {
+  // RFC México: 12-13 chars alfanuméricos en mayúsculas (persona moral 12, persona física 13)
+  MX: {
+    pattern: /^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/i,
+    minLen: 12,
+    maxLen: 13,
+    example: 'ABC123456XYZ',
+  },
+  // CNPJ Brasil: 14 dígitos (con o sin máscara)
+  BR: {
+    pattern: /^[0-9.\-\/]{14,18}$/,
+    minLen: 14,
+    maxLen: 18,
+    example: '12.345.678/0001-90',
+  },
+  // NIT Colombia: 9-10 dígitos + dígito de verificación (formato 900.123.456-7)
+  CO: {
+    pattern: /^[0-9.\-]{9,15}$/,
+    minLen: 9,
+    maxLen: 15,
+    example: '900.123.456-7',
+  },
+};
+
 const schema = yup.object({
-  fiscalId: yup.string().min(4, 'Mínimo 4 caracteres').required('Obligatorio'),
   fiscalResidenceCountry: yup.string().required('Obligatorio'),
   incorporationCountry: yup.string().required('Obligatorio'),
+  fiscalId: yup
+    .string()
+    .required('Obligatorio')
+    .test('fiscal-id-format', function (value) {
+      const country = this.parent.fiscalResidenceCountry as string | undefined;
+      if (!value) return this.createError({ message: 'Obligatorio' });
+      if (!country) return true; // si no hay país, no validamos contra patrón
+      const rule = FISCAL_ID_RULES[country];
+      if (!rule) return true;
+      const cleaned = value.trim();
+      if (cleaned.length < rule.minLen || cleaned.length > rule.maxLen) {
+        return this.createError({
+          message: `Debe tener entre ${rule.minLen} y ${rule.maxLen} caracteres (ej: ${rule.example})`,
+        });
+      }
+      if (!rule.pattern.test(cleaned)) {
+        return this.createError({
+          message: `Formato inválido. Ejemplo válido: ${rule.example}`,
+        });
+      }
+      return true;
+    }),
   commercialName: yup.string().default(''),
-  legalName: yup.string().min(2, 'Mínimo 2 caracteres').required('Obligatorio'),
+  legalName: yup
+    .string()
+    .required('Obligatorio')
+    .min(3, 'Ingresá al menos 3 caracteres')
+    .max(150, 'Máximo 150 caracteres'),
   registrationNumber: yup.string().default(''),
-  corporateEmail: yup.string().email('Correo inválido').default(''),
-  website: yup.string().default(''),
+  corporateEmail: yup
+    .string()
+    .email('Ingresá un correo válido (ej: contacto@empresa.com)')
+    .default(''),
+  website: yup
+    .string()
+    .default('')
+    .test('website-format', 'Debe ser una URL válida (ej: https://tuempresa.com)', value => {
+      if (!value) return true;
+      try {
+        const url = value.startsWith('http') ? value : `https://${value}`;
+        new URL(url);
+        return /\.[a-z]{2,}/i.test(url);
+      } catch {
+        return false;
+      }
+    }),
   industry: yup.string().required('Obligatorio'),
   monthlyVolume: yup.string().required('Obligatorio'),
   operationCountries: yup
@@ -72,8 +144,9 @@ export function Step1DatosEmpresa() {
       website: existing?.website ?? '',
       industry: existing?.industry ?? '',
       monthlyVolume: existing?.monthlyVolume ?? '',
-      // Pre-poblado con 4 países: el usuario debe deseleccionar uno para cumplir el máximo de 3.
-      operationCountries: existing?.operationCountries ?? ['MX', 'CO', 'BR'],
+      // Países de operación: vacíos por default. El comercio debe seleccionarlos
+      // (hasta 3) — decisión 21/05 con Producto.
+      operationCountries: existing?.operationCountries ?? [],
     },
   });
 

@@ -64,7 +64,7 @@ export function PreloginLayout({ children, splitScreen = true }: PreloginLayoutP
         >
           <Stack spacing={3} sx={{ width: '100%', maxWidth: 440 }}>
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Logo width={{ xs: 64, sm: 74, md: 86 }} />
+              <Logo width={{ xs: 90, sm: 104, md: 120 }} />
             </Box>
             {children}
           </Stack>

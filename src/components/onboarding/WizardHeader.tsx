@@ -53,7 +53,7 @@ export function WizardHeader({ restricted = false }: WizardHeaderProps) {
         sx={{ paddingX: { xs: 2, md: 4 }, paddingY: 1.5, minHeight: 64 }}
       >
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Logo width={80} />
+          <Logo width={112} />
           {user && (
             <Stack
               direction="row"

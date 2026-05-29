@@ -13,12 +13,12 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import CheckIcon from '@mui/icons-material/Check';
 import { useAuthStore, type Language } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
@@ -29,21 +29,22 @@ function initialsOf(firstName?: string, lastName?: string): string {
   return `${firstName?.[0] ?? '?'}${lastName?.[0] ?? ''}`.toUpperCase();
 }
 
-// Header del menú: muestra el comercio del usuario logueado (companyName del
-// authStore). Antes era una constante hardcoded "Red Efectiva" — pasamos al
-// dato dinámico para que cada comercio vea su propio nombre.
-
+/**
+ * Fase 1 — el menú del avatar tiene 3 ítems consolidados:
+ *
+ *   Información        → datos del comercio (read-only, vienen del onboarding)
+ *   Mi cuenta          → datos del usuario + preferencias + notificaciones
+ *   Centro de Seguridad → 2FA, contraseña, sesiones
+ *
+ * Cerrar sesión NO está acá: vive en el footer del sidebar para evitar duplicar
+ * la acción. Idioma y Modo oscuro se mantienen como controles inline.
+ */
 const ITEMS = [
   { label: 'Información', to: '/profile', icon: <InfoOutlinedIcon fontSize="small" /> },
-  { label: 'Cuenta', to: '/account', icon: <ManageAccountsOutlinedIcon fontSize="small" /> },
+  { label: 'Mi cuenta', to: '/account', icon: <ManageAccountsOutlinedIcon fontSize="small" /> },
   { label: 'Centro de Seguridad', to: '/security', icon: <ShieldOutlinedIcon fontSize="small" /> },
 ];
 
-// Los 3 idiomas oficiales del portal post-login (Cruce v2 14/05).
-// La selección persiste en localStorage vía uiStore (clave 'psp-ui-preferences')
-// y NO desloguea — fue bug de plataforma legacy y se evita explícitamente.
-// La traducción real de la UI queda fuera del MVP (es Fase 11); por ahora la
-// selección guarda preferencia y muestra un aviso para English / Português.
 const LANGUAGES: { code: Language; label: string; short: string }[] = [
   { code: 'es', label: 'Español', short: 'Español' },
   { code: 'en', label: 'English', short: 'English' },
@@ -67,12 +68,6 @@ export function AvatarMenu() {
 
   if (!user) return null;
 
-  const handleLogout = () => {
-    logout();
-    setAnchorEl(null);
-    navigate('/login', { replace: true });
-  };
-
   const handleLanguageChange = (code: Language) => {
     setLanguage(code);
     const comingSoon = COMING_SOON_TOAST[code];
@@ -81,6 +76,9 @@ export function AvatarMenu() {
 
   const currentLanguageShort =
     LANGUAGES.find(l => l.code === language)?.short ?? 'Español';
+
+  // Header dinámico con companyName del comercio (no constante hardcodeada).
+  const companyHeader = user.companyName ?? '';
 
   return (
     <>
@@ -145,7 +143,7 @@ export function AvatarMenu() {
               display: 'block',
             }}
           >
-            {user.companyName}
+            {companyHeader}
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {user.firstName} {user.lastName}
@@ -178,7 +176,7 @@ export function AvatarMenu() {
           </MenuItem>
         ))}
         <Divider />
-        {/* Idioma — header tenue + 3 opciones inline. No desloguea (regla NotebookLM). */}
+        {/* Idioma — header tenue + 3 opciones inline. No desloguea. */}
         <Box sx={{ paddingX: 2, paddingTop: 1, paddingBottom: 0.5 }}>
           <Stack direction="row" alignItems="center" spacing={0.75}>
             <LanguageOutlinedIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
@@ -240,11 +238,20 @@ export function AvatarMenu() {
           />
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleLogout}>
+        {/* Cerrar sesión vive en el menú del avatar (header), tal como se acordó:
+            separado de la navegación operativa del sidebar. */}
+        <MenuItem
+          onClick={() => {
+            setAnchorEl(null);
+            logout();
+            navigate('/login', { replace: true });
+          }}
+          sx={{ color: colors.bannerError.fg }}
+        >
           <ListItemIcon>
-            <LogoutIcon fontSize="small" />
+            <LogoutOutlinedIcon fontSize="small" sx={{ color: colors.bannerError.fg }} />
           </ListItemIcon>
-          <ListItemText primary="Cerrar sesión" primaryTypographyProps={{ fontSize: 14 }} />
+          <ListItemText primary="Cerrar sesión" primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }} />
         </MenuItem>
       </Menu>
     </>

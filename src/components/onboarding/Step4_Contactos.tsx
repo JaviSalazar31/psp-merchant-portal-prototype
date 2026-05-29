@@ -5,6 +5,10 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   Stack,
   Table,
@@ -13,10 +17,12 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { WizardFooter } from './OnboardingLayout';
 import CountryPills from '@/components/common/CountryPills';
 import ContextBanner from '@/components/common/ContextBanner';
@@ -54,6 +60,9 @@ export function Step4Contactos() {
     editing: null,
   });
 
+  // Contacto pendiente de confirmación de borrado (null = no hay dialog abierto).
+  const [toDelete, setToDelete] = useState<Contact | null>(null);
+
   useEffect(() => {
     if (countries.length === 0) navigate('/onboarding/step-1');
   }, [countries, navigate]);
@@ -75,6 +84,16 @@ export function Step4Contactos() {
       return { ...prev, [current]: newList };
     });
     toast.success(modal.editing ? 'Contacto actualizado.' : 'Contacto creado.');
+  };
+
+  const onDelete = (contact: Contact) => {
+    if (!current) return;
+    setByCountry(prev => {
+      const list = prev[current] ?? [];
+      return { ...prev, [current]: list.filter(c => c.id !== contact.id) };
+    });
+    setToDelete(null);
+    toast.success('Contacto eliminado.');
   };
 
   const onContinue = () => {
@@ -205,9 +224,22 @@ export function Step4Contactos() {
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" onClick={() => setModal({ open: true, editing: c })}>
-                        <EditOutlinedIcon fontSize="small" />
-                      </IconButton>
+                      <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                        <Tooltip title="Editar">
+                          <IconButton size="small" onClick={() => setModal({ open: true, editing: c })}>
+                            <EditOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton
+                            size="small"
+                            onClick={() => setToDelete(c)}
+                            sx={{ color: colors.bannerError.fg }}
+                          >
+                            <DeleteOutlineIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 );
@@ -216,6 +248,35 @@ export function Step4Contactos() {
           </Table>
         </TableContainer>
       )}
+
+      <Dialog
+        open={!!toDelete}
+        onClose={() => setToDelete(null)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: 2 } } }}
+      >
+        <DialogTitle>¿Eliminar contacto?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {toDelete
+              ? `Vas a eliminar a ${toDelete.firstName} ${toDelete.lastName}. Esta acción no se puede deshacer.`
+              : ''}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button variant="text" color="inherit" onClick={() => setToDelete(null)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => toDelete && onDelete(toDelete)}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <CrearContactoModal
         open={modal.open}

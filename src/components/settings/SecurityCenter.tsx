@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   Stack,
   Tooltip,
   Typography,
@@ -12,8 +11,8 @@ import {
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LockResetIcon from '@mui/icons-material/LockReset';
-import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import ChangePasswordInline from './ChangePasswordInline';
+import RolesList from '@/components/roles/RolesList';
 import TimeAgo from '@/components/common/TimeAgo';
 import { useAuthStore } from '@/stores/authStore';
 import { useSecurityStore } from '@/stores/securityStore';
@@ -102,59 +101,6 @@ export function SecurityCenter() {
         </Stack>
       </CardSection>
 
-      <CardSection title="Autenticación de dos factores (2FA)">
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-        >
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                backgroundColor: colors.bgSubtle,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: colors.textSecondary,
-              }}
-            >
-              <ShieldOutlinedIcon />
-            </Box>
-            <Stack spacing={0.5} sx={{ flex: 1 }}>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Verificación en dos pasos
-                </Typography>
-                <Chip
-                  label="Próximamente disponible"
-                  size="small"
-                  sx={{
-                    backgroundColor: colors.bgSubtle,
-                    color: colors.textSecondary,
-                    fontWeight: 600,
-                  }}
-                />
-              </Stack>
-              <Typography variant="body2" color="text.secondary">
-                Agregá una capa extra de seguridad a tu cuenta. Te vamos a pedir un código de tu
-                app autenticadora cada vez que inicies sesión.
-              </Typography>
-            </Stack>
-          </Stack>
-          <Tooltip title="Disponible en la próxima versión." placement="top">
-            <span>
-              <Button variant="outlined" disabled>
-                Activar 2FA
-              </Button>
-            </span>
-          </Tooltip>
-        </Stack>
-      </CardSection>
-
       <CardSection title="Contraseña" description="Recomendamos cambiarla cada 90 días.">
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -203,6 +149,13 @@ export function SecurityCenter() {
           </Button>
         </Stack>
         <ChangePasswordInline open={pwdOpen} onClose={() => setPwdOpen(false)} />
+      </CardSection>
+
+      <CardSection
+        title="Roles disponibles"
+        description="Información sobre los tipos de rol que existen en el portal y qué permisos tiene cada uno. Esta sección es consultiva: la asignación de roles a usuarios se hace desde Configuración → Usuarios."
+      >
+        <RolesList />
       </CardSection>
     </Stack>
   );

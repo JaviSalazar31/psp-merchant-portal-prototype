@@ -4,12 +4,14 @@ import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import MarkEmailUnreadOutlinedIcon from '@mui/icons-material/MarkEmailUnreadOutlined';
 import { colors } from '@/theme/tokens';
 import { toast } from '@/stores/toastStore';
+import { useAuthStore } from '@/stores/authStore';
 
 const COUNTDOWN_SECONDS = 60;
 
 export function ConfirmEmailScreen() {
   const location = useLocation();
   const navigate = useNavigate();
+  const confirmEmail = useAuthStore(s => s.confirmEmail);
   const emailFromState = (location.state as { email?: string } | null)?.email;
   const [email] = useState(emailFromState ?? 'tu correo registrado');
   const [seconds, setSeconds] = useState(COUNTDOWN_SECONDS);
@@ -26,9 +28,17 @@ export function ConfirmEmailScreen() {
   };
 
   const handleSimulateClick = () => {
-    // Demo only: simulamos que el usuario clickeó el link del correo y validó.
+    // Demo only: simulamos que el usuario clickeó el link del correo. Recién
+    // acá se autentica (el registro dejó al usuario como pendingUser).
+    const confirmed = confirmEmail();
+    if (!confirmed) {
+      // No hay usuario pendiente (ej. entró directo a la URL). Lo mandamos a registro.
+      toast.error('No encontramos un registro pendiente de confirmación.');
+      navigate('/registro', { replace: true });
+      return;
+    }
     toast.success('Correo confirmado. ¡Empecemos con el onboarding!');
-    navigate('/onboarding/step-1');
+    navigate('/onboarding/step-1', { replace: true });
   };
 
   const countdownLabel = `(${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')})`;

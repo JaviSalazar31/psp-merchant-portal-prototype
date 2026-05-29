@@ -3,7 +3,7 @@ import { Box, Button } from '@mui/material';
 import { DataGrid, type GridColumnVisibilityModel } from '@mui/x-data-grid';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
-import { TRANSACTION_COLUMN_DEFS, DEFAULT_VISIBLE_COLUMNS } from './transactionColumns';
+import { buildTransactionColumns, DEFAULT_VISIBLE_COLUMNS } from './transactionColumns';
 import type { MockTransaction } from '@/mocks/transactions';
 import { colors } from '@/theme/tokens';
 
@@ -35,6 +35,9 @@ export function TransactionsTable({
     DEFAULT_VISIBLE_COLUMNS,
   );
   const visibility = columnVisibility ?? internalVisibility;
+
+  // Columnas con handler dinámico para el ícono ojito de la última columna.
+  const columns = useMemo(() => buildTransactionColumns(onRowClick), [onRowClick]);
 
   const isEmpty = !loading && !error && rows.length === 0;
 
@@ -83,7 +86,7 @@ export function TransactionsTable({
     >
       <DataGrid
         rows={rows}
-        columns={TRANSACTION_COLUMN_DEFS}
+        columns={columns}
         loading={loading}
         autoHeight
         disableRowSelectionOnClick

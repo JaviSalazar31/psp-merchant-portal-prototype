@@ -32,6 +32,7 @@ import PasswordChecklist, {
 import PasswordStrengthBar from '@/components/common/PasswordStrengthBar';
 import { COUNTRIES } from '@/constants/countries';
 import { useAuthStore, type Language } from '@/stores/authStore';
+import { useOnboardingStore } from '@/stores/onboardingStore';
 import { useUIStore } from '@/stores/uiStore';
 import { redirectAfterLogin } from '@/routes/postAuthRedirect';
 import { colors } from '@/theme/tokens';
@@ -74,11 +75,8 @@ type FormValues = yup.InferType<typeof registroSchema>;
 export function RegistroForm() {
   const navigate = useNavigate();
   const registerNewUser = useAuthStore(s => s.registerNewUser);
-  // El idioma elegido en el registro se propaga al uiStore para que el resto
-  // de la app (AvatarMenu, LanguageSelector, banners post-auth) lea esa
-  // preferencia. Antes vivía solo en user.language y el portal mostraba
-  // siempre 'es' por default — bug detectado 21/05 en demo con equipo.
-  const setUiLanguage = useUIStore(s => s.setLanguage);
+  const setRegistrationCountry = useOnboardingStore(s => s.setRegistrationCountry);
+  const setUILanguage = useUIStore(s => s.setLanguage);
 
   const [showPw, setShowPw] = useState(false);
   const [showPwConfirm, setShowPwConfirm] = useState(false);
@@ -127,11 +125,13 @@ export function RegistroForm() {
       password: data.password,
       language: data.language,
     });
-    // Propagar el idioma elegido en el registro a la preferencia de UI
-    // para que se mantenga durante todo el flujo de onboarding y el portal.
-    setUiLanguage(data.language);
+    // Propagar el idioma elegido al uiStore para que el AvatarMenu y el resto
+    // del portal post-login lo reflejen sin requerir un cambio manual.
+    setUILanguage(data.language);
+    // Guardar el país de incorporación para que el Step 1 del wizard pueda
+    // pre-poblar País Residencia Fiscal y País Constitución.
+    setRegistrationCountry(data.country);
     setSubmitting(false);
-    // Después de registrarse, vamos a la pantalla de confirm-email del flujo.
     const token = `tok_${user.id}`;
     navigate(`/confirm-email/${token}`, { state: { email: data.email } });
   };

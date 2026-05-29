@@ -20,6 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { COUNTRIES } from '@/constants/countries';
 import { DEPARTMENTS } from '@/constants/industries';
+import { isValidLocalPhone } from '@/constants/fiscalIdValidators';
 import type { Contact } from '@/stores/onboardingStore';
 import { colors } from '@/theme/tokens';
 
@@ -28,7 +29,14 @@ const schema = yup.object({
   lastName: yup.string().min(2, 'Mínimo 2 caracteres').required('Obligatorio'),
   email: yup.string().email('Correo inválido').required('Obligatorio'),
   phonePrefix: yup.string().required('Obligatorio'),
-  phone: yup.string().min(6, 'Mínimo 6 dígitos').required('Obligatorio'),
+  phone: yup
+    .string()
+    .required('Obligatorio')
+    .test('phone-valid', 'Número inválido para el país', function (value) {
+      // El modal recibe el country por props; lo inyectamos por contexto.
+      const ctx = (this.options.context ?? {}) as { country?: string };
+      return isValidLocalPhone(ctx.country ?? '', value ?? '');
+    }),
   department: yup.string().required('Obligatorio'),
 });
 
@@ -60,6 +68,7 @@ export function CrearContactoModal({
   } = useForm<FormValues>({
     resolver: yupResolver(schema),
     mode: 'onChange',
+    context: { country },
     defaultValues: {
       firstName: existing?.firstName ?? '',
       lastName: existing?.lastName ?? '',

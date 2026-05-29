@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import {
   Button,
-  Divider,
   ListItemText,
   Menu,
   MenuItem,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import AddIcon from '@mui/icons-material/Add';
 import { EMPTY_FILTERS, type TransactionFilters } from './filterTypes';
 import { colors } from '@/theme/tokens';
 
@@ -102,17 +99,8 @@ export function ViewsDropdown({ activeKey, onSelect }: Props) {
             />
           </MenuItem>
         ))}
-        <Divider />
-        <Tooltip title="Próximamente — V2" placement="left">
-          <span>
-            <MenuItem disabled>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <AddIcon fontSize="small" />
-                <Typography variant="body2">Crear vista personalizada</Typography>
-              </Stack>
-            </MenuItem>
-          </span>
-        </Tooltip>
+        {/* Item "Crear vista personalizada" eliminado: funcionalidad fuera de
+            alcance del MVP, no se muestra para no generar expectativas. */}
       </Menu>
     </>
   );

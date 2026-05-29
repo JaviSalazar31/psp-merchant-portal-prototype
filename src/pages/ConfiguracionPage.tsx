@@ -2,27 +2,20 @@ import { useState } from 'react';
 import { Card, CardContent, Stack, Tab, Tabs, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import UsersList from '@/components/users/UsersList';
-import RolesList from '@/components/roles/RolesList';
 import WebhooksList from '@/components/settings/WebhooksList';
 import ApiKeysList from '@/components/settings/ApiKeysList';
 import { useAuthStore } from '@/stores/authStore';
 import { colors } from '@/theme/tokens';
 
 /**
- * Página /configuracion — unifica en una sola sección del sidebar:
- * - Usuarios y Roles (gestión interna del comercio)
- * - Canales de notificación (webhooks que recibe el comercio)
- * - API Keys (credenciales de integración)
+ * Página /configuracion — tres tabs:
+ *   - Usuarios (gestión CRUD de usuarios del comercio)
+ *   - Canales de notificación (webhooks / emails)
+ *   - API Keys (credenciales de integración, sólo lectura)
  *
- * Decisión de Fase 1 (revisión 21/05 con equipo de Producto):
- * consolidar para reducir entradas del sidebar y agrupar bajo el mismo
- * concepto "configuración de mi cuenta operativa".
- *
- * Patrón estándar de la industria (Stripe, Conekta, MercadoPago) — tabs
- * dentro de una sola pantalla, sin sub-items en sidebar.
- *
- * Módulo bloqueado hasta aprobación de Backoffice (igual que sus piezas
- * originales) — los usuarios no pueden gestionarse antes de la aprobación.
+ * Roles NO vive acá: se movió al Centro de Seguridad como sección informativa,
+ * porque es consultivo (no operativo) y conviene separarlo de configuración
+ * administrativa.
  */
 
 interface TabConfig {
@@ -33,7 +26,6 @@ interface TabConfig {
 export default function ConfiguracionPage() {
   const user = useAuthStore(s => s.user);
   const [tab, setTab] = useState(0);
-  const [usersTab, setUsersTab] = useState(0);
 
   if (!user) return null;
 
@@ -66,23 +58,8 @@ export default function ConfiguracionPage() {
     );
   }
 
-  // Sub-tab interno de Usuarios: Usuarios / Roles
-  const UsersTabContent = (
-    <Stack spacing={2}>
-      <Tabs
-        value={usersTab}
-        onChange={(_, v) => setUsersTab(v)}
-        sx={{ minHeight: 'auto', borderBottom: `1px solid ${colors.borderDefault}` }}
-      >
-        <Tab label="Usuarios" />
-        <Tab label="Roles" />
-      </Tabs>
-      {usersTab === 0 ? <UsersList /> : <RolesList />}
-    </Stack>
-  );
-
   const TABS: TabConfig[] = [
-    { label: 'Usuarios', content: UsersTabContent },
+    { label: 'Usuarios', content: <UsersList /> },
     { label: 'Canales de notificación', content: <WebhooksList /> },
     { label: 'API Keys', content: <ApiKeysList /> },
   ];

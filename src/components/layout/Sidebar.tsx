@@ -1,15 +1,13 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import LogoutIcon from '@mui/icons-material/Logout';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Logo from '@/components/common/Logo';
-import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { colors } from '@/theme/tokens';
 
@@ -20,15 +18,7 @@ interface SidebarItem {
   to?: string;
   label: string;
   icon: React.ReactNode;
-  /** Otras rutas que deben marcar este item como activo (ej: /transactions/pay-in → /transactions/...). */
   matchPrefix?: string;
-  /** Entrada visible pero sin funcionalidad (señal de roadmap). */
-  disabled?: boolean;
-  /** Texto del tooltip al hover (usado por las entradas disabled). */
-  tooltip?: string;
-  /** Sangría extra para entradas que cuelgan de un grupo. */
-  indent?: boolean;
-  /** Entrada de ayuda para revisión de UX/UI del prototipo, no es parte del producto. */
   demo?: boolean;
 }
 
@@ -36,7 +26,6 @@ const ITEMS: SidebarItem[] = [
   { to: '/home', label: 'Home', icon: <HomeOutlinedIcon /> },
   { to: '/transactions/pay-in', label: 'Transactions', icon: <SwapHorizIcon />, matchPrefix: '/transactions' },
   { to: '/settlements', label: 'Settlements', icon: <AccountBalanceWalletOutlinedIcon /> },
-  { to: '/configuracion', label: 'Configuración', icon: <SettingsOutlinedIcon />, matchPrefix: '/configuracion' },
   { to: '/_demo-404', label: 'Página 404', icon: <LinkOffIcon />, demo: true },
 ];
 
@@ -48,16 +37,8 @@ interface SidebarProps {
 export function Sidebar({ variant, onNavigate }: SidebarProps) {
   const collapsed = useUIStore(s => s.sidebarCollapsed) && variant === 'permanent';
   const toggle = useUIStore(s => s.toggleSidebar);
-  const logout = useAuthStore(s => s.logout);
-  const navigate = useNavigate();
 
   const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
-
-  const handleLogout = () => {
-    onNavigate?.();
-    logout();
-    navigate('/login', { replace: true });
-  };
 
   return (
     <Box
@@ -102,8 +83,6 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
             <Box
               sx={{
                 position: 'absolute',
-                // Dot anclado a la esquina superior del trazo vertical de la P,
-                // como acento tipografico (no flotando suelto a la derecha).
                 top: 5,
                 right: 12,
                 width: 6,
@@ -129,57 +108,54 @@ export function Sidebar({ variant, onNavigate }: SidebarProps) {
         ))}
       </Stack>
 
+      {/* Footer: Configuración separada de la parte operativa (Home/Transactions/
+          Settlements), tal como se acordó. Cerrar sesión NO está acá: vive en el
+          menú del avatar (header). El chevron de colapso queda alineado a la derecha. */}
       <Box
         sx={{
           borderTop: `1px solid ${colors.borderDefault}`,
           paddingY: 1,
           paddingX: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0.25,
         }}
       >
-        {/* Cerrar sesión — acción ubicada en el footer del sidebar para
-            acceso de un solo click sin tener que abrir el AvatarMenu. */}
-        <Tooltip title={collapsed ? 'Cerrar sesión' : ''} placement="right">
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1.5}
-            component="button"
-            onClick={handleLogout}
-            sx={{
-              background: 'none',
-              border: 'none',
-              width: '100%',
-              paddingY: 1,
-              paddingX: 1.25,
-              borderRadius: 1.5,
-              cursor: 'pointer',
-              color: colors.textPrimary,
-              textAlign: 'left',
-              '&:hover': { backgroundColor: colors.bgSubtle },
-            }}
-          >
-            <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-              <LogoutIcon />
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={0.5}
+          sx={{
+            justifyContent: collapsed ? 'center' : 'space-between',
+          }}
+        >
+          {!collapsed && (
+            <Box sx={{ flex: 1 }}>
+              <SidebarRow
+                item={{ to: '/configuracion', label: 'Configuración', icon: <SettingsOutlinedIcon /> }}
+                collapsed={false}
+                onNavigate={onNavigate}
+              />
             </Box>
-            {!collapsed && (
-              <Typography variant="body2" sx={{ fontWeight: 500, flex: 1 }}>
-                Cerrar sesión
-              </Typography>
-            )}
-          </Stack>
-        </Tooltip>
-        {variant === 'permanent' && (
-          <Box sx={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end', mt: 0.25 }}>
+          )}
+          {collapsed && (
+            <NavLink
+              to="/configuracion"
+              onClick={() => onNavigate?.()}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <Tooltip title="Configuración" placement="right">
+                <IconButton size="small">
+                  <SettingsOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </NavLink>
+          )}
+          {variant === 'permanent' && (
             <Tooltip title={collapsed ? 'Expandir' : 'Contraer'} placement="right">
               <IconButton size="small" onClick={() => toggle()}>
                 {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
               </IconButton>
             </Tooltip>
-          </Box>
-        )}
+          )}
+        </Stack>
       </Box>
     </Box>
   );
@@ -192,48 +168,7 @@ interface RowProps {
 }
 
 function SidebarRow({ item, collapsed, onNavigate }: RowProps) {
-  const { icon, label, to, matchPrefix, disabled, tooltip, indent, demo } = item;
-
-  if (disabled) {
-    return (
-      <Tooltip title={collapsed ? `${label} · ${tooltip ?? ''}` : tooltip ?? ''} placement="right">
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1.5}
-          sx={{
-            paddingY: 1,
-            paddingX: 1.25,
-            paddingLeft: indent && !collapsed ? 3 : 1.25,
-            borderRadius: 1.5,
-            cursor: 'not-allowed',
-            color: colors.textMuted,
-            opacity: 0.7,
-          }}
-        >
-          <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>{icon}</Box>
-          {!collapsed && (
-            <>
-              <Typography variant="body2" sx={{ fontWeight: 500, flex: 1 }}>
-                {label}
-              </Typography>
-              <Chip
-                label="Próximamente"
-                size="small"
-                sx={{
-                  height: 18,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  backgroundColor: colors.bgSubtle,
-                  color: colors.textMuted,
-                }}
-              />
-            </>
-          )}
-        </Stack>
-      </Tooltip>
-    );
-  }
+  const { icon, label, to, matchPrefix, demo } = item;
 
   return (
     <NavLink to={to ?? '#'} onClick={() => onNavigate?.()} style={{ textDecoration: 'none', color: 'inherit' }}>

@@ -5,6 +5,7 @@ import { WizardFooter } from './OnboardingLayout';
 import CountryPills from '@/components/common/CountryPills';
 import ContextBanner from '@/components/common/ContextBanner';
 import { COUNTRIES, COUNTRY_BY_CODE } from '@/constants/countries';
+import { isValidZipCode, isValidLocalPhone } from '@/constants/fiscalIdValidators';
 import { useOnboardingStore, type AddressData, type Step2Data } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
 import { colors } from '@/theme/tokens';
@@ -25,7 +26,10 @@ function emptyAddress(country: string): AddressData {
 
 function isAddressValid(a: AddressData | undefined): boolean {
   if (!a) return false;
-  return !!a.country && !!a.line1 && !!a.zip && !!a.state && !!a.phone;
+  if (!a.country || !a.line1 || !a.state) return false;
+  if (!isValidZipCode(a.country, a.zip)) return false;
+  if (!isValidLocalPhone(a.country, a.phone)) return false;
+  return true;
 }
 
 export function Step2DireccionComercial() {
@@ -151,7 +155,16 @@ export function Step2DireccionComercial() {
             label="Código postal *"
             value={address.zip}
             onChange={e => setField('zip', e.target.value)}
-            error={!address.zip}
+            error={!!address.zip && !isValidZipCode(address.country, address.zip)}
+            helperText={
+              address.country === 'MX'
+                ? '5 dígitos'
+                : address.country === 'BR'
+                ? '8 dígitos (formato 00000-000)'
+                : address.country === 'CO'
+                ? '6 dígitos'
+                : 'Código postal del país'
+            }
           />
         </Grid>
         <Grid item xs={12} md={6}>
@@ -190,7 +203,16 @@ export function Step2DireccionComercial() {
               label="Teléfono corporativo *"
               value={address.phone}
               onChange={e => setField('phone', e.target.value)}
-              error={!address.phone}
+              error={!!address.phone && !isValidLocalPhone(address.country, address.phone)}
+              helperText={
+                address.country === 'MX'
+                  ? '10 dígitos'
+                  : address.country === 'BR'
+                  ? '10 u 11 dígitos'
+                  : address.country === 'CO'
+                  ? '10 dígitos'
+                  : 'Número local sin prefijo'
+              }
               sx={{ flex: 1 }}
             />
           </Stack>

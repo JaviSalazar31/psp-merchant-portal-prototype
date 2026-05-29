@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -119,10 +120,44 @@ export function LockoutDialog({ open, type, lockedUntil, onClose }: LockoutDialo
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, pt: 1, justifyContent: 'center' }}>
-        <Button variant="contained" color="primary" onClick={handleClose} fullWidth>
-          {isPersistent ? 'Cerrar' : 'Entendido'}
-        </Button>
+      <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
+        {isPersistent ? (
+          // Bloqueo persistente: no hay contador que destrabe. La recuperación
+          // es la única salida real → acción primaria.
+          <Stack spacing={1} sx={{ width: '100%' }}>
+            <Button
+              component={RouterLink}
+              to="/password-reset"
+              variant="contained"
+              color="primary"
+              onClick={handleClose}
+              fullWidth
+            >
+              Recuperar contraseña
+            </Button>
+            <Button variant="text" color="inherit" onClick={handleClose} fullWidth>
+              Cerrar
+            </Button>
+          </Stack>
+        ) : (
+          // Bloqueo temporal: el camino primario es esperar el contador.
+          // Recuperar es secundario (por si no recuerda la clave).
+          <Stack spacing={1} sx={{ width: '100%' }}>
+            <Button variant="contained" color="primary" onClick={handleClose} fullWidth>
+              Entendido
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/password-reset"
+              variant="text"
+              color="inherit"
+              onClick={handleClose}
+              fullWidth
+            >
+              ¿Olvidaste tu contraseña? Recuperala
+            </Button>
+          </Stack>
+        )}
       </DialogActions>
     </Dialog>
   );

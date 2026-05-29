@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -22,7 +22,6 @@ import ConfiguracionPage from '@/pages/ConfiguracionPage';
 import AccountPage from '@/pages/AccountPage';
 import SecurityCenterPage from '@/pages/SecurityCenterPage';
 import ProfilePage from '@/pages/ProfilePage';
-import CompanyProfilePage from '@/pages/CompanyProfilePage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import DevPage from '@/pages/DevPage';
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
@@ -35,29 +34,22 @@ import Step6EnviarRevision from '@/components/onboarding/Step6_EnviarRevision';
 import AppLayout from '@/components/layout/AppLayout';
 import TransactionsLayout from '@/components/transactions/TransactionsLayout';
 
+// Listener global de drag-drop para prevenir que el browser abra archivos
+// soltados FUERA del dropzone del wizard como nueva pestaña.
+if (typeof window !== 'undefined') {
+  const prevent = (e: DragEvent) => {
+    // Si el target está dentro de un dropzone interno, deja que ese maneje el evento.
+    const t = e.target as HTMLElement | null;
+    if (t && t.closest('[data-dropzone]')) return;
+    e.preventDefault();
+  };
+  window.addEventListener('dragover', prevent);
+  window.addEventListener('drop', prevent);
+}
+
 export default function App() {
   const darkMode = useUIStore(s => s.darkMode);
   const theme = useMemo(() => buildMuiTheme(darkMode ? 'dark' : 'light'), [darkMode]);
-
-  // Bloqueo global del comportamiento default del navegador para drag & drop.
-  // Cuando el usuario suelta un archivo FUERA de un dropzone de la app, el
-  // navegador por default abre el archivo en una nueva pestaña — comportamiento
-  // confuso y no deseado (decisión 21/05 con Producto). Acá interceptamos
-  // dragover y drop a nivel window para que el archivo simplemente no haga
-  // nada si se suelta fuera de un dropzone. Los dropzones individuales
-  // (DocumentUploadCard) llaman stopPropagation, así que su funcionalidad
-  // queda intacta.
-  useEffect(() => {
-    const preventDefaults = (e: DragEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener('dragover', preventDefaults);
-    window.addEventListener('drop', preventDefaults);
-    return () => {
-      window.removeEventListener('dragover', preventDefaults);
-      window.removeEventListener('drop', preventDefaults);
-    };
-  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -112,17 +104,17 @@ export default function App() {
 
             <Route path="/settlements" element={<SettlementsPage />} />
             <Route path="/configuracion" element={<ConfiguracionPage />} />
-            {/* Aliases de retro-compatibilidad — todas redirigen a Configuración */}
-            <Route path="/users" element={<Navigate to="/configuracion" replace />} />
-            <Route path="/notifications" element={<Navigate to="/configuracion" replace />} />
-            <Route path="/developers" element={<Navigate to="/configuracion" replace />} />
             <Route path="/account" element={<AccountPage />} />
             <Route path="/security" element={<SecurityCenterPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/wizard" element={<CompanyProfilePage />} />
+
+            {/* Aliases de retro-compatibilidad */}
+            <Route path="/users" element={<Navigate to="/configuracion" replace />} />
+            <Route path="/notifications" element={<Navigate to="/configuracion" replace />} />
+            <Route path="/developers" element={<Navigate to="/configuracion" replace />} />
+            <Route path="/profile/wizard" element={<Navigate to="/profile" replace />} />
           </Route>
 
-          {/* Ruta oculta para presentaciones / debug. Solo accesible tipeando /dev. */}
           <Route path="/dev" element={<DevPage />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/500" element={<NotFoundPage variant="500" />} />

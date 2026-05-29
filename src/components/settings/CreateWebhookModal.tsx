@@ -21,7 +21,6 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import WebhookTechnicalDetails from './WebhookTechnicalDetails';
 import { useWebhooksStore } from '@/stores/webhooksStore';
 import { toast } from '@/stores/toastStore';
 import {
@@ -300,7 +299,11 @@ export function CreateWebhookModal({ open, webhook, onClose }: Props) {
             )}
           </Stack>
 
-          {type === 'callback' && <WebhookTechnicalDetails />}
+          {/* Bloque "Detalles técnicos" removido del modal de creación: la firma HMAC,
+              formato de payload y política de reintentos son responsabilidad de quien
+              integra los webhooks (típicamente el equipo de desarrollo), no del usuario
+              del comercio que está dando de alta el canal. Esa documentación vive en el
+              portal de desarrolladores / docs externos. */}
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3 }}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -19,105 +19,51 @@ import { WizardFooter } from './OnboardingLayout';
 import ContextBanner from '@/components/common/ContextBanner';
 import { COUNTRIES, COUNTRY_BY_CODE, FISCAL_ID_HINTS } from '@/constants/countries';
 import { INDUSTRIES, MONTHLY_VOLUME_RANGES } from '@/constants/industries';
+import {
+  isValidFiscalId,
+  isValidWebsite,
+} from '@/constants/fiscalIdValidators';
 import { useOnboardingStore, type Step1Data } from '@/stores/onboardingStore';
 import { colors } from '@/theme/tokens';
 
-// Máximo de tres países de operación según la definición productiva de Fase 1.
 const MAX_OPERATION_COUNTRIES = 3;
 
-// Patrones de identificación fiscal por país (validación de forma — la
-// verificación de dígito verificador completa queda server-side en
-// producción, acá aplicamos validación de formato para evitar entradas
-// claramente inválidas, alineado a buenas prácticas de mercado fintech
-// LATAM).
-const FISCAL_ID_RULES: Record<
-  string,
-  { pattern: RegExp; minLen: number; maxLen: number; example: string }
-> = {
-  // RFC México: 12-13 chars alfanuméricos en mayúsculas (persona moral 12, persona física 13)
-  MX: {
-    pattern: /^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/i,
-    minLen: 12,
-    maxLen: 13,
-    example: 'ABC123456XYZ',
-  },
-  // CNPJ Brasil: 14 dígitos (con o sin máscara)
-  BR: {
-    pattern: /^[0-9.\-\/]{14,18}$/,
-    minLen: 14,
-    maxLen: 18,
-    example: '12.345.678/0001-90',
-  },
-  // NIT Colombia: 9-10 dígitos + dígito de verificación (formato 900.123.456-7)
-  CO: {
-    pattern: /^[0-9.\-]{9,15}$/,
-    minLen: 9,
-    maxLen: 15,
-    example: '900.123.456-7',
-  },
-};
-
+/**
+ * Schema con validaciones REALES por país:
+ *   - fiscalId: dígito verificador real (RFC homoclave+fecha, CNPJ módulo 11, NIT DIAN)
+ *   - corporateEmail: bloquea gmail/hotmail/outlook/yahoo/etc.
+ *   - website: TLD válido (no acepta "x" sin punto)
+ *   - legalName: min 3, max 200, sin caracteres exóticos
+ */
 const schema = yup.object({
   fiscalResidenceCountry: yup.string().required('Obligatorio'),
   incorporationCountry: yup.string().required('Obligatorio'),
   fiscalId: yup
     .string()
     .required('Obligatorio')
-    .test(
-      'fiscal-id-format',
-      'Formato inválido',
-      function (value) {
-        const country = this.parent.fiscalResidenceCountry as string | undefined;
-        if (!value) return this.createError({ message: 'Obligatorio' });
-        if (!country) {
-          // Sin país no podemos validar formato específico, pero sí impedir
-          // entradas obviamente inválidas (mínimo 6 caracteres alfanuméricos).
-          if (value.trim().length < 6) {
-            return this.createError({
-              message: 'Seleccioná primero el país de residencia fiscal',
-            });
-          }
-          return true;
-        }
-        const rule = FISCAL_ID_RULES[country];
-        if (!rule) return true;
-        const cleaned = value.trim();
-        if (cleaned.length < rule.minLen || cleaned.length > rule.maxLen) {
-          return this.createError({
-            message: `Debe tener entre ${rule.minLen} y ${rule.maxLen} caracteres (ej: ${rule.example})`,
-          });
-        }
-        if (!rule.pattern.test(cleaned)) {
-          return this.createError({
-            message: `Formato inválido. Ejemplo válido: ${rule.example}`,
-          });
-        }
-        return true;
-      },
-    ),
+    .test('fiscalId-valid', 'Identificación fiscal inválida para el país de residencia', function (value) {
+      const country = this.parent.fiscalResidenceCountry;
+      if (!country || !value) return false;
+      return isValidFiscalId(country, value);
+    }),
   commercialName: yup.string().default(''),
   legalName: yup
     .string()
-    .required('Obligatorio')
-    .min(3, 'Ingresá al menos 3 caracteres')
-    .max(150, 'Máximo 150 caracteres'),
+    .min(3, 'Mínimo 3 caracteres')
+    .max(200, 'Máximo 200 caracteres')
+    .required('Obligatorio'),
   registrationNumber: yup.string().default(''),
   corporateEmail: yup
     .string()
-    .email('Ingresá un correo válido (ej: contacto@empresa.com)')
+    .email('Correo inválido')
     .default(''),
   website: yup
     .string()
     .default('')
-    .test('website-format', 'Debe ser una URL válida (ej: https://tuempresa.com)', value => {
-      if (!value) return true;
-      try {
-        const url = value.startsWith('http') ? value : `https://${value}`;
-        new URL(url);
-        return /\.[a-z]{2,}/i.test(url);
-      } catch {
-        return false;
-      }
+    .test('website-valid', 'URL inválida (ejemplo: https://miempresa.com)', v => {
+      // Opcional: solo valida si el usuario completó algo.
+      if (!v || v.trim() === '') return true;
+      return isValidWebsite(v);
     }),
   industry: yup.string().required('Obligatorio'),
   monthlyVolume: yup.string().required('Obligatorio'),
@@ -134,6 +80,16 @@ export function Step1DatosEmpresa() {
   const navigate = useNavigate();
   const existing = useOnboardingStore(s => s.step1Data);
   const setStep1Data = useOnboardingStore(s => s.setStep1Data);
+  const registrationCountry = useOnboardingStore(s => s.registrationCountry);
+
+  // Auto-prefill: el país de incorporación elegido en Registro pre-pobla
+  // País Residencia Fiscal y País Constitución (editables, no bloqueados).
+  // Asunción: para PYMES suelen coincidir en >95% de casos; corporativos
+  // multinacionales pueden hacer override manual.
+  const initialFiscalResidence =
+    existing?.fiscalResidenceCountry ?? registrationCountry ?? '';
+  const initialIncorporation =
+    existing?.incorporationCountry ?? registrationCountry ?? '';
 
   const {
     control,
@@ -144,12 +100,11 @@ export function Step1DatosEmpresa() {
     formState: { errors, isValid },
   } = useForm<FormValues>({
     resolver: yupResolver(schema),
-    // onTouched: los errores aparecen al perder foco, no mientras se escribe.
     mode: 'onTouched',
     defaultValues: {
       fiscalId: existing?.fiscalId ?? '',
-      fiscalResidenceCountry: existing?.fiscalResidenceCountry ?? '',
-      incorporationCountry: existing?.incorporationCountry ?? '',
+      fiscalResidenceCountry: initialFiscalResidence,
+      incorporationCountry: initialIncorporation,
       commercialName: existing?.commercialName ?? '',
       legalName: existing?.legalName ?? '',
       registrationNumber: existing?.registrationNumber ?? '',
@@ -157,8 +112,7 @@ export function Step1DatosEmpresa() {
       website: existing?.website ?? '',
       industry: existing?.industry ?? '',
       monthlyVolume: existing?.monthlyVolume ?? '',
-      // Países de operación: vacíos por default. El comercio debe seleccionarlos
-      // (hasta 3) — decisión 21/05 con Producto.
+      // Vacío por default; el usuario debe seleccionar explícitamente.
       operationCountries: existing?.operationCountries ?? [],
     },
   });
@@ -177,6 +131,14 @@ export function Step1DatosEmpresa() {
     }
   }, [fiscalResidence]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sincronizar incorporación con residencia fiscal mientras el user no la edite.
+  const [touchedIncorporation, setTouchedIncorporation] = useState(false);
+  useEffect(() => {
+    if (!fiscalResidence) return;
+    if (touchedIncorporation) return;
+    setValue('incorporationCountry', fiscalResidence, { shouldValidate: true });
+  }, [fiscalResidence, touchedIncorporation, setValue]);
+
   const onSubmit = (data: FormValues) => {
     setStep1Data(data as Step1Data);
     navigate('/onboarding/step-2');
@@ -192,14 +154,6 @@ export function Step1DatosEmpresa() {
       </Stack>
 
       <SectionDivider>IDENTIFICACIÓN FISCAL</SectionDivider>
-
-      <TextField
-        {...register('fiscalId')}
-        label={`Número de Identificación Fiscal${hint ? ` (${hint.label})` : ''} *`}
-        placeholder={hint?.placeholder ?? 'Ingresá el ID fiscal de la empresa'}
-        error={!!errors.fiscalId}
-        helperText={errors.fiscalId?.message}
-      />
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
@@ -234,6 +188,10 @@ export function Step1DatosEmpresa() {
                 select
                 label="País Constitución *"
                 value={field.value || ''}
+                onChange={e => {
+                  setTouchedIncorporation(true);
+                  field.onChange(e);
+                }}
                 error={!!errors.incorporationCountry}
                 helperText={errors.incorporationCountry?.message}
               >
@@ -247,6 +205,14 @@ export function Step1DatosEmpresa() {
           />
         </Grid>
       </Grid>
+
+      <TextField
+        {...register('fiscalId')}
+        label={`Número de Identificación Fiscal${hint ? ` (${hint.label})` : ''} *`}
+        placeholder={hint?.placeholder ?? 'Ingresá el ID fiscal de la empresa'}
+        error={!!errors.fiscalId}
+        helperText={errors.fiscalId?.message}
+      />
 
       {hint && (
         <ContextBanner variant="info" title={hint.flowName}>
@@ -268,7 +234,7 @@ export function Step1DatosEmpresa() {
         <Grid item xs={12} md={6}>
           <TextField
             {...register('legalName')}
-            label="Nombre de la empresa *"
+            label="Nombre legal de la empresa *"
             error={!!errors.legalName}
             helperText={errors.legalName?.message}
           />
@@ -294,7 +260,7 @@ export function Step1DatosEmpresa() {
           <TextField
             {...register('website')}
             label="Sitio web"
-            placeholder="https://"
+            placeholder="https://miempresa.com"
             error={!!errors.website}
             helperText={errors.website?.message}
           />
@@ -361,7 +327,6 @@ export function Step1DatosEmpresa() {
             getOptionLabel={code => COUNTRY_BY_CODE[code]?.name ?? code}
             onChange={(_, val) => {
               setTouchedCountries(true);
-              // Forzamos máximo de 3 países en el cliente para alinear con la spec productiva.
               const trimmed = val.length > MAX_OPERATION_COUNTRIES ? val.slice(0, MAX_OPERATION_COUNTRIES) : val;
               field.onChange(trimmed);
             }}

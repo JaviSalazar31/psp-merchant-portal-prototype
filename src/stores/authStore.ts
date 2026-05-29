@@ -120,12 +120,15 @@ const seedByEmail = MOCK_USERS.reduce<Record<string, MockUserSeed>>(
 interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  /** Usuario registrado pero aún sin confirmar el correo (no autenticado). */
+  pendingUser: AuthUser | null;
   failedAttempts: Record<string, number>;
   lockedUntil: Record<string, number>;
 
   login: (email: string, password: string) => LoginResult;
   logout: () => void;
   registerNewUser: (data: RegistrationData) => AuthUser;
+  confirmEmail: () => AuthUser | null;
   updateUser: (patch: Partial<AuthUser>) => void;
   resetFailedAttempts: (email: string) => void;
   isLockedFor: (email: string) => { locked: boolean; lockedUntil?: number };
@@ -134,6 +137,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
+  pendingUser: null,
   failedAttempts: {},
   lockedUntil: {},
 
@@ -192,7 +196,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { success: false, error: 'invalid' };
   },
 
-  logout: () => set({ user: null, isAuthenticated: false }),
+  logout: () => set({ user: null, isAuthenticated: false, pendingUser: null }),
 
   registerNewUser: (data) => {
     const newUser: AuthUser = {
@@ -208,8 +212,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       language: data.language,
       createdAt: new Date(),
     };
-    set({ user: newUser, isAuthenticated: true });
+    // NO autenticamos en el registro: el usuario queda "pendiente de
+    // confirmación de correo". Se guarda como pendingUser y recién se
+    // autentica cuando confirma el email (confirmEmail), replicando el
+    // flujo real de verificación previa de un onboarding fintech.
+    set({ pendingUser: newUser });
     return newUser;
+  },
+
+  // Confirma el correo del usuario pendiente y recién ahí lo autentica.
+  confirmEmail: () => {
+    const pending = get().pendingUser;
+    if (!pending) return null;
+    set({ user: pending, isAuthenticated: true, pendingUser: null });
+    return pending;
   },
 
   updateUser: (patch) => {

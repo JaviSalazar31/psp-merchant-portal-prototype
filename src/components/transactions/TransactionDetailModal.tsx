@@ -101,19 +101,58 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
   const method = PAYMENT_METHOD_BY_KEY[transaction.paymentMethod];
   const isFinalError = transaction.status === 'FALLIDO' || transaction.status === 'RECHAZADO';
 
-  const handleExportPdf = () => {
+  const handleExportCsv = () => {
     const stamp = transaction.id.slice(0, 18);
-    const blob = new Blob(
-      [`Comprobante simulado · PSP\n\nID: ${transaction.id}\nMonto: ${formatCurrency(transaction.amount, transaction.currency)}\nEstado: ${meta.label}`],
-      { type: 'application/pdf' },
-    );
+
+    // CSV con bloques de las 4 tabs del visor (General, Detalle, Eventos, Comisiones).
+    // Formato: 2 columnas (clave, valor) por simplicidad — un Excel lo abre directo.
+    const esc = (v: string | number | undefined | null): string => {
+      const s = v == null ? '' : String(v);
+      // Escape estándar CSV: si tiene coma, comilla o salto de línea, lo envolvemos en comillas y duplicamos comillas internas.
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const lines: string[] = [];
+    lines.push('Seccion,Campo,Valor');
+
+    // --- General ---
+    lines.push(['General', 'ID transaccion', esc(transaction.id)].join(','));
+    lines.push(['General', 'Tipo', transaction.type].join(','));
+    lines.push(['General', 'Estado', esc(meta.label)].join(','));
+    lines.push(['General', 'Fecha creacion', esc(transaction.createdAt.toISOString())].join(','));
+    lines.push(['General', 'Fecha aprobacion', esc(transaction.approvedAt?.toISOString() ?? '')].join(','));
+    lines.push(['General', 'Pais', esc(country?.name ?? transaction.country)].join(','));
+    lines.push(['General', 'Metodo de pago', esc(method?.label ?? transaction.paymentMethod)].join(','));
+    lines.push(['General', 'Monto bruto', esc(formatCurrency(transaction.amount, transaction.currency))].join(','));
+    lines.push(['General', 'Comisiones', esc(formatCurrency(transaction.fees, transaction.currency))].join(','));
+    lines.push(['General', 'Impuestos', esc(formatCurrency(transaction.taxes, transaction.currency))].join(','));
+    lines.push(['General', 'Monto neto', esc(formatCurrency(transaction.netAmount, transaction.currency))].join(','));
+
+    // --- Detalle ---
+    lines.push(['Detalle', 'Cliente', esc(transaction.customerName)].join(','));
+    lines.push(['Detalle', 'Email cliente', esc(transaction.customerEmail)].join(','));
+    lines.push(['Detalle', 'Referencia partner', esc(transaction.partnerReference ?? '')].join(','));
+    lines.push(['Detalle', 'Referencia comercio', esc(transaction.reference)].join(','));
+
+    // --- Eventos --- (timeline simulado; tomamos al menos created/approved si existen)
+    lines.push(['Eventos', 'Created', esc(transaction.createdAt.toISOString())].join(','));
+    if (transaction.approvedAt) {
+      lines.push(['Eventos', 'Approved', esc(transaction.approvedAt.toISOString())].join(','));
+    }
+
+    // --- Comisiones --- (desglose simple disponible en la transaccion)
+    lines.push(['Comisiones', 'Total comisiones', esc(formatCurrency(transaction.fees, transaction.currency))].join(','));
+    lines.push(['Comisiones', 'Impuestos sobre comisiones', esc(formatCurrency(transaction.taxes, transaction.currency))].join(','));
+
+    const csv = '\uFEFF' + lines.join('\n'); // BOM para que Excel respete acentos
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `psp-tx-${stamp}.pdf`;
+    a.download = `psp-tx-${stamp}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Comprobante exportado.');
+    toast.success('Detalle exportado a CSV.');
   };
 
   const renderBanner = () => {
@@ -208,7 +247,6 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
             <Grid container spacing={1.5}>
               <Grid item xs={12} md={6}>
                 <KV label="ID transacción" value={<CopyableId value={transaction.id} />} />
-                <KV label="Referencia" value={<Box sx={{ fontFamily: 'monospace', fontSize: 12 }}>{transaction.reference}</Box>} />
                 <KV label="Tipo" value={transaction.type === 'pay-in' ? 'Pay-In' : 'Pay-Out'} />
                 <KV label="Estado" value={<StatusBadge status={transaction.status} />} />
               </Grid>
@@ -366,15 +404,15 @@ export function TransactionDetailModal({ transaction, open, onClose }: Props) {
         )}
       </DialogContent>
 
-      {/* Adenda Cambio 5: footer SOLO Exportar PDF. NO se muestran botones Refund ni Dispute. */}
+      {/* Footer: Exportar a CSV con el detalle de las 4 tabs. */}
       <DialogActions sx={{ paddingX: 3, paddingY: 2, justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
           color="primary"
           startIcon={<FileDownloadOutlinedIcon fontSize="small" />}
-          onClick={handleExportPdf}
+          onClick={handleExportCsv}
         >
-          Exportar PDF
+          Exportar a CSV
         </Button>
       </DialogActions>
     </Dialog>

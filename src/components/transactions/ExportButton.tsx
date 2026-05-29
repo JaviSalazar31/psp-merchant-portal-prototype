@@ -3,13 +3,19 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { toast } from '@/stores/toastStore';
 
 /**
- * Botón de exportación simplificado para Fase 1: única opción CSV.
- * Decisión 21/05 con Producto — reducir opciones para no exponer features
- * que requieren backend específico (Excel multi-hoja, PDF con layout,
- * scheduling). Esto se reabre en fases posteriores.
+ * Botón "Exportar a CSV" — único formato disponible (no PDF, no Excel).
+ *
+ * Acordado: la exportación general de listados (Transacciones, Settlements)
+ * solo soporta CSV. Los formatos PDF/Excel quedaron descartados para esta
+ * versión. No hay menú desplegable: el botón ejecuta directo el download.
+ *
+ * En esta maqueta la descarga es simulada (un .csv con un placeholder de
+ * scope). En el integrado real, esta función arma el CSV con los filtros
+ * actuales aplicados a la grilla.
  */
-function simulateDownload(filename: string, content: string): void {
-  const blob = new Blob([content], { type: 'text/csv' });
+
+function simulateCsvDownload(filename: string, content: string): void {
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -22,7 +28,7 @@ export function ExportButton({ scope }: { scope: string }) {
   const handleExport = () => {
     const stamp = new Date().toISOString().slice(0, 10);
     const filename = `psp-${scope}-${stamp}.csv`;
-    simulateDownload(filename, `Export simulado de ${scope} (CSV)`);
+    simulateCsvDownload(filename, `Export simulado de ${scope}`);
     toast.success(`Exportación lista — descargando ${filename}`);
   };
 

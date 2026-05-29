@@ -33,22 +33,18 @@ export interface BankAccountData {
   accountNumber: string;
   accountHolder: string;
   bankAddress: string;
-  /** México: CLABE de 18 dígitos. */
-  clabe?: string;
-  /** Brasil: número de agencia bancaria (4-5 dígitos). */
-  agencyNumber?: string;
-  /** Brasil/Colombia: tipo de cuenta (corriente/ahorros). */
-  accountType?: 'corriente' | 'ahorros' | '';
-  /** Brasil: tipo de documento del titular (CPF/CNPJ). */
-  holderDocumentType?: 'CPF' | 'CNPJ' | '';
-  /** Brasil/Colombia: documento del titular (CPF/CNPJ/Cédula/NIT). */
-  holderDocumentNumber?: string;
-  /** Mantenidos para retro-compatibilidad con sesiones anteriores del wizard,
-      ya no se exponen en el UI (decisión 21/05). */
-  routingNumber?: string;
-  iban?: string;
-  swift?: string;
+  routingNumber: string;
+  iban: string;
+  swift: string;
   currency: string;
+  // Campos por país (Fase 1):
+  //   BR: accountType (corriente/poupança), branchCode (agencia 4-5 dígitos),
+  //       holderDocumentType ('CPF'|'CNPJ'), holderDocument
+  //   CO: accountType (corriente/ahorros), holderDocument (cédula/NIT)
+  accountType?: string;
+  branchCode?: string;
+  holderDocumentType?: string;
+  holderDocument?: string;
 }
 export type Step3Data = Record<string, BankAccountData>;
 
@@ -97,6 +93,9 @@ interface OnboardingState {
   countriesSelected: string[];
   activeCountry: string | null;
   submitting: boolean;
+  /** País de incorporación elegido en el formulario de Registro, usado para
+   *  pre-poblar País Residencia Fiscal y País Constitución en el Step 1. */
+  registrationCountry: string | null;
 
   setStep1Data: (data: Step1Data) => void;
   setStep2Data: (data: Step2Data) => void;
@@ -106,6 +105,7 @@ interface OnboardingState {
   goToStep: (step: 1 | 2 | 3 | 4 | 5 | 6) => void;
   setActiveCountry: (c: string) => void;
   setConfirmed: (v: boolean) => void;
+  setRegistrationCountry: (c: string) => void;
   submitOnboarding: () => Promise<void>;
   resetWizard: () => void;
 }
@@ -126,6 +126,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   countriesSelected: [],
   activeCountry: null,
   submitting: false,
+  registrationCountry: null,
 
   setStep1Data: (data) => {
     const state = get();
@@ -143,6 +144,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   goToStep: (step) => set({ currentStep: step }),
   setActiveCountry: (c) => set({ activeCountry: c }),
   setConfirmed: (v) => set({ confirmed: v }),
+  setRegistrationCountry: (c) => set({ registrationCountry: c }),
 
   submitOnboarding: async () => {
     set({ submitting: true });
@@ -166,5 +168,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       countriesSelected: [],
       activeCountry: null,
       submitting: false,
+      registrationCountry: null,
     }),
 }));

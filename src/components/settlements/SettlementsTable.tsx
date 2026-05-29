@@ -1,6 +1,5 @@
-import { Box, Button, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import DownloadIcon from '@mui/icons-material/Download';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import StatusBadge from '@/components/common/StatusBadge';
 import EmptyState from '@/components/common/EmptyState';
@@ -160,31 +159,6 @@ export function SettlementsTable({ rows, onRowClick, hasActiveFilters, onClearFi
       headerName: 'STATUS',
       width: 130,
       renderCell: ({ value }) => <StatusBadge status={String(value)} />,
-    },
-    {
-      field: 'actions',
-      headerName: 'ACTIONS',
-      width: 150,
-      sortable: false,
-      filterable: false,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: ({ row }) => (
-        <Tooltip title="Descargar reporte CSV">
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
-            onClick={e => {
-              e.stopPropagation();
-              downloadReport(row);
-            }}
-            sx={{ minHeight: 30, paddingX: 1.25, fontSize: 12 }}
-          >
-            Reporte
-          </Button>
-        </Tooltip>
-      ),
     },
   ];
 

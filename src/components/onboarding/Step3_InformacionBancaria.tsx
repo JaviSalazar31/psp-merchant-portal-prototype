@@ -12,26 +12,40 @@ import { WizardFooter } from './OnboardingLayout';
 import SectionDivider from './SectionDivider';
 import CountryPills from '@/components/common/CountryPills';
 import ContextBanner from '@/components/common/ContextBanner';
-import { COUNTRIES, COUNTRY_BY_CODE, countryToCurrency } from '@/constants/countries';
-import { CURRENCY_BY_CODE } from '@/constants/currencies';
+import { COUNTRY_BY_CODE, countryToCurrency } from '@/constants/countries';
+import {
+  isValidCLABE,
+  isValidCPF,
+  isValidCNPJ,
+  isValidCedulaCO,
+  isValidNIT,
+} from '@/constants/fiscalIdValidators';
 import { useOnboardingStore, type BankAccountData, type Step3Data } from '@/stores/onboardingStore';
 import { toast } from '@/stores/toastStore';
 
 /**
- * Step 3 — Información Bancaria.
+ * Campos por país (Fase 1):
+ *   MX → CLABE (18 dígitos) + Banco + Titular
+ *   BR → Banco + Agencia + Cuenta + Tipo cuenta + Tipo doc + Documento titular
+ *   CO → Banco + Cuenta + Tipo cuenta + Cédula/NIT del titular
  *
- * Cambios 21/05 con Producto:
- * - Campos específicos por país (MX/BR/CO). USD ya no aparece como opción
- *   de moneda — la moneda queda atada a la moneda local del país del banco.
- * - Se quitan IBAN, Número de ruta y SWIFT (no aplican para transferencias
- *   locales en LATAM; cada país tiene su propia infraestructura).
- *
- * Requisitos por país (alineado a buenas prácticas de mercado fintech LATAM):
- * - México: CLABE de 18 dígitos + Nombre del banco + Titular
- * - Brasil: Agencia + Cuenta + Tipo (corriente/ahorros) + CPF/CNPJ del titular
- *   + Banco
- * - Colombia: Número de cuenta + Tipo (corriente/ahorros) + Banco + Titular
+ * La moneda es derivada del país (no editable): MXN/BRL/COP.
  */
+
+const BR_ACCOUNT_TYPES = [
+  { value: 'corriente', label: 'Cuenta corriente' },
+  { value: 'poupanca', label: 'Cuenta poupança' },
+];
+
+const CO_ACCOUNT_TYPES = [
+  { value: 'corriente', label: 'Cuenta corriente' },
+  { value: 'ahorros', label: 'Cuenta de ahorros' },
+];
+
+const BR_DOC_TYPES = [
+  { value: 'CPF', label: 'CPF' },
+  { value: 'CNPJ', label: 'CNPJ' },
+];
 
 function emptyBank(country: string): BankAccountData {
   return {
@@ -40,34 +54,41 @@ function emptyBank(country: string): BankAccountData {
     accountNumber: '',
     accountHolder: '',
     bankAddress: '',
-    clabe: '',
-    agencyNumber: '',
-    accountType: '',
-    holderDocumentType: '',
-    holderDocumentNumber: '',
-    currency: countryToCurrency(country),
+    routingNumber: '',
+    iban: '',
+    swift: '',
+    currency: countryToCurrency(country) ?? 'USD',
+    accountType: country === 'BR' ? 'corriente' : country === 'CO' ? 'corriente' : '',
+    branchCode: '',
+    holderDocumentType: country === 'BR' ? 'CNPJ' : '',
+    holderDocument: '',
   };
 }
 
 function isBankValid(b: BankAccountData | undefined): boolean {
   if (!b) return false;
-  const baseValid = !!b.bankCountry && !!b.bankName && !!b.accountHolder && !!b.currency;
-  if (!baseValid) return false;
+  if (!b.bankName) return false;
+  if (!b.accountHolder) return false;
+
   switch (b.bankCountry) {
     case 'MX':
-      // CLABE: 18 dígitos exactos
-      return !!b.clabe && /^[0-9]{18}$/.test(b.clabe);
-    case 'BR':
-      return (
-        !!b.agencyNumber &&
-        !!b.accountNumber &&
-        !!b.accountType &&
-        !!b.holderDocumentType &&
-        !!b.holderDocumentNumber
-      );
+      return isValidCLABE(b.accountNumber);
+    case 'BR': {
+      if (!b.accountNumber) return false;
+      if (!b.branchCode || !/^[0-9]{4,5}$/.test(b.branchCode)) return false;
+      if (!b.accountType) return false;
+      if (!b.holderDocumentType) return false;
+      if (b.holderDocumentType === 'CPF' && !isValidCPF(b.holderDocument ?? '')) return false;
+      if (b.holderDocumentType === 'CNPJ' && !isValidCNPJ(b.holderDocument ?? '')) return false;
+      return true;
+    }
     case 'CO':
-      return !!b.accountNumber && !!b.accountType && !!b.holderDocumentNumber;
+      if (!b.accountNumber) return false;
+      if (!b.accountType) return false;
+      // Acepta cédula o NIT del titular.
+      return isValidCedulaCO(b.holderDocument ?? '') || isValidNIT(b.holderDocument ?? '');
     default:
+      // Fallback genérico.
       return !!b.accountNumber;
   }
 }
@@ -106,19 +127,6 @@ export function Step3InformacionBancaria() {
     }));
   };
 
-  // Cambiar el país del banco también resetea la moneda a la moneda local del país
-  const setBankCountry = (newCountry: string) => {
-    if (!current) return;
-    setByCountry(prev => ({
-      ...prev,
-      [current]: {
-        ...(prev[current] ?? emptyBank(current)),
-        bankCountry: newCountry,
-        currency: countryToCurrency(newCountry),
-      },
-    }));
-  };
-
   const onContinue = () => {
     if (!countries.every(c => isBankValid(byCountry[c]))) {
       toast.error('Completá los datos bancarios para todos los países seleccionados.');
@@ -132,15 +140,43 @@ export function Step3InformacionBancaria() {
 
   if (!bank || !current) return null;
 
-  const countryLabel = COUNTRY_BY_CODE[bank.bankCountry]?.name ?? bank.bankCountry;
-  const currencyLabel = CURRENCY_BY_CODE[bank.currency]?.name ?? bank.currency;
+  // Helpers para validación inline de cada campo según país.
+  const mxClabeError =
+    bank.bankCountry === 'MX' &&
+    !!bank.accountNumber &&
+    !isValidCLABE(bank.accountNumber)
+      ? 'CLABE inválida (deben ser 18 dígitos con verificador correcto)'
+      : '';
+
+  const brDocError =
+    bank.bankCountry === 'BR' && !!bank.holderDocument
+      ? bank.holderDocumentType === 'CPF' && !isValidCPF(bank.holderDocument)
+        ? 'CPF inválido'
+        : bank.holderDocumentType === 'CNPJ' && !isValidCNPJ(bank.holderDocument)
+        ? 'CNPJ inválido'
+        : ''
+      : '';
+
+  const brBranchError =
+    bank.bankCountry === 'BR' &&
+    !!bank.branchCode &&
+    !/^[0-9]{4,5}$/.test(bank.branchCode ?? '')
+      ? 'Agencia debe tener 4 o 5 dígitos'
+      : '';
+
+  const coDocError =
+    bank.bankCountry === 'CO' && !!bank.holderDocument
+      ? !isValidCedulaCO(bank.holderDocument) && !isValidNIT(bank.holderDocument)
+        ? 'Documento inválido (cédula 6-10 dígitos o NIT con verificador)'
+        : ''
+      : '';
 
   return (
     <Stack spacing={2.5}>
       <Stack spacing={0.5}>
         <Typography variant="h2">Información Bancaria</Typography>
         <Typography variant="body2" color="text.secondary">
-          Información sobre la cuenta bancaria para procesar tus liquidaciones.
+          Cuenta bancaria local del país para procesar tus liquidaciones.
         </Typography>
       </Stack>
 
@@ -155,76 +191,54 @@ export function Step3InformacionBancaria() {
         </ContextBanner>
       )}
 
-      <SectionDivider>CUENTA BANCARIA</SectionDivider>
+      <SectionDivider>CUENTA BANCARIA — {COUNTRY_BY_CODE[current]?.name?.toUpperCase()}</SectionDivider>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <TextField
-            select
-            label="País del banco *"
-            value={bank.bankCountry}
-            onChange={e => setBankCountry(e.target.value)}
-          >
-            {COUNTRIES.map(c => (
-              <MenuItem key={c.code} value={c.code}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Box component="span" sx={{ fontSize: 16 }}>{c.flag}</Box>
-                  <span>{c.name}</span>
-                </Stack>
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             label="Nombre del banco *"
             value={bank.bankName}
             onChange={e => setField('bankName', e.target.value)}
             error={!bank.bankName}
-            helperText={!bank.bankName ? 'Ingresá el nombre de la institución' : ''}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            label="Nombre del titular *"
+            value={bank.accountHolder}
+            onChange={e => setField('accountHolder', e.target.value)}
+            error={!bank.accountHolder}
           />
         </Grid>
 
-        {/* Campos específicos por país */}
+        {/* === MÉXICO: CLABE === */}
         {bank.bankCountry === 'MX' && (
-          <>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="CLABE * (18 dígitos)"
-                value={bank.clabe ?? ''}
-                onChange={e => setField('clabe', e.target.value.replace(/\D/g, '').slice(0, 18))}
-                error={!!bank.clabe && bank.clabe.length !== 18}
-                helperText={
-                  !bank.clabe
-                    ? 'Clave Bancaria Estandarizada de 18 dígitos'
-                    : bank.clabe.length !== 18
-                    ? `Faltan ${18 - bank.clabe.length} dígitos`
-                    : '✓ CLABE válida'
-                }
-                inputProps={{ inputMode: 'numeric', maxLength: 18 }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Nombre del titular *"
-                value={bank.accountHolder}
-                onChange={e => setField('accountHolder', e.target.value)}
-                error={!bank.accountHolder}
-                helperText="Nombre que figura en la cuenta bancaria"
-              />
-            </Grid>
-          </>
+          <Grid item xs={12}>
+            <TextField
+              label="CLABE Interbancaria * (18 dígitos)"
+              value={bank.accountNumber}
+              onChange={e =>
+                setField('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 18))
+              }
+              error={!!mxClabeError}
+              helperText={mxClabeError || 'Verificamos dígito verificador SPEI automáticamente.'}
+              inputProps={{ inputMode: 'numeric', maxLength: 18 }}
+            />
+          </Grid>
         )}
 
+        {/* === BRASIL: Agencia + Cuenta + Tipo + CPF/CNPJ === */}
         {bank.bankCountry === 'BR' && (
           <>
             <Grid item xs={12} md={6}>
               <TextField
                 label="Agencia * (4-5 dígitos)"
-                value={bank.agencyNumber ?? ''}
-                onChange={e => setField('agencyNumber', e.target.value.replace(/\D/g, '').slice(0, 5))}
-                error={!!bank.agencyNumber && bank.agencyNumber.length < 4}
-                helperText={!bank.agencyNumber ? 'Número de agencia del banco' : ''}
+                value={bank.branchCode ?? ''}
+                onChange={e =>
+                  setField('branchCode', e.target.value.replace(/\D/g, '').slice(0, 5))
+                }
+                error={!!brBranchError}
+                helperText={brBranchError}
                 inputProps={{ inputMode: 'numeric', maxLength: 5 }}
               />
             </Grid>
@@ -232,122 +246,106 @@ export function Step3InformacionBancaria() {
               <TextField
                 label="Número de cuenta *"
                 value={bank.accountNumber}
-                onChange={e => setField('accountNumber', e.target.value.replace(/[^0-9\-]/g, ''))}
+                onChange={e => setField('accountNumber', e.target.value)}
                 error={!bank.accountNumber}
-                helperText="Incluye el dígito verificador (ej: 12345-6)"
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 select
                 label="Tipo de cuenta *"
-                value={bank.accountType ?? ''}
-                onChange={e => setField('accountType', e.target.value as 'corriente' | 'ahorros' | '')}
-                error={!bank.accountType}
+                value={bank.accountType ?? 'corriente'}
+                onChange={e => setField('accountType', e.target.value)}
               >
-                <MenuItem value="corriente">Conta Corrente</MenuItem>
-                <MenuItem value="ahorros">Conta Poupança</MenuItem>
+                {BR_ACCOUNT_TYPES.map(t => (
+                  <MenuItem key={t.value} value={t.value}>
+                    {t.label}
+                  </MenuItem>
+                ))}
               </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Nombre del titular *"
-                value={bank.accountHolder}
-                onChange={e => setField('accountHolder', e.target.value)}
-                error={!bank.accountHolder}
-              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 select
-                label="Tipo de documento del titular *"
-                value={bank.holderDocumentType ?? ''}
-                onChange={e =>
-                  setField('holderDocumentType', e.target.value as 'CPF' | 'CNPJ' | '')
-                }
-                error={!bank.holderDocumentType}
+                label="Documento del titular *"
+                value={bank.holderDocumentType ?? 'CNPJ'}
+                onChange={e => setField('holderDocumentType', e.target.value)}
               >
-                <MenuItem value="CPF">CPF (persona física)</MenuItem>
-                <MenuItem value="CNPJ">CNPJ (persona jurídica)</MenuItem>
+                {BR_DOC_TYPES.map(t => (
+                  <MenuItem key={t.value} value={t.value}>
+                    {t.label}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <TextField
-                label={`${bank.holderDocumentType || 'CPF/CNPJ'} del titular *`}
-                value={bank.holderDocumentNumber ?? ''}
-                onChange={e => setField('holderDocumentNumber', e.target.value)}
-                error={!bank.holderDocumentNumber}
-                helperText={
-                  bank.holderDocumentType === 'CPF'
-                    ? '000.000.000-00'
-                    : bank.holderDocumentType === 'CNPJ'
-                    ? '00.000.000/0000-00'
-                    : ''
-                }
+                label={`${bank.holderDocumentType ?? 'CNPJ'} del titular *`}
+                value={bank.holderDocument ?? ''}
+                onChange={e => setField('holderDocument', e.target.value)}
+                error={!!brDocError}
+                helperText={brDocError}
+                placeholder={bank.holderDocumentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
               />
             </Grid>
           </>
         )}
 
+        {/* === COLOMBIA: Cuenta + Tipo + Cédula/NIT === */}
         {bank.bankCountry === 'CO' && (
           <>
             <Grid item xs={12} md={6}>
               <TextField
                 label="Número de cuenta *"
                 value={bank.accountNumber}
-                onChange={e => setField('accountNumber', e.target.value.replace(/\D/g, ''))}
+                onChange={e => setField('accountNumber', e.target.value)}
                 error={!bank.accountNumber}
-                helperText="Solo dígitos"
-                inputProps={{ inputMode: 'numeric' }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
                 select
                 label="Tipo de cuenta *"
-                value={bank.accountType ?? ''}
-                onChange={e => setField('accountType', e.target.value as 'corriente' | 'ahorros' | '')}
-                error={!bank.accountType}
+                value={bank.accountType ?? 'corriente'}
+                onChange={e => setField('accountType', e.target.value)}
               >
-                <MenuItem value="corriente">Cuenta corriente</MenuItem>
-                <MenuItem value="ahorros">Cuenta de ahorros</MenuItem>
+                {CO_ACCOUNT_TYPES.map(t => (
+                  <MenuItem key={t.value} value={t.value}>
+                    {t.label}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Nombre del titular *"
-                value={bank.accountHolder}
-                onChange={e => setField('accountHolder', e.target.value)}
-                error={!bank.accountHolder}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12}>
               <TextField
                 label="Cédula o NIT del titular *"
-                value={bank.holderDocumentNumber ?? ''}
-                onChange={e => setField('holderDocumentNumber', e.target.value)}
-                error={!bank.holderDocumentNumber}
-                helperText="Documento que valida la titularidad"
+                value={bank.holderDocument ?? ''}
+                onChange={e => setField('holderDocument', e.target.value)}
+                error={!!coDocError}
+                helperText={coDocError ?? 'Cédula (6-10 dígitos) o NIT (con dígito verificador DIAN)'}
               />
             </Grid>
           </>
         )}
 
-        <Grid item xs={12}>
-          <TextField
-            label="Dirección del banco"
-            value={bank.bankAddress}
-            onChange={e => setField('bankAddress', e.target.value)}
-            helperText="Opcional"
-          />
-        </Grid>
+        {/* === FALLBACK genérico para países sin lógica específica === */}
+        {!['MX', 'BR', 'CO'].includes(bank.bankCountry) && (
+          <Grid item xs={12}>
+            <TextField
+              label="Número de cuenta *"
+              value={bank.accountNumber}
+              onChange={e => setField('accountNumber', e.target.value)}
+              error={!bank.accountNumber}
+            />
+          </Grid>
+        )}
 
         <Grid item xs={12} md={6}>
           <TextField
             label="Moneda de la cuenta"
-            value={`${bank.currency} — ${currencyLabel}`}
+            value={bank.currency}
             disabled
-            helperText={`Moneda local de ${countryLabel} (no editable)`}
+            helperText="Se deriva automáticamente del país"
           />
         </Grid>
       </Grid>
